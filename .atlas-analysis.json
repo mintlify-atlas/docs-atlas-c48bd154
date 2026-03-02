@@ -1,0 +1,104 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Context7",
+  "projectDescription": "MCP server and SDK providing up-to-date documentation and code examples for any library directly in AI coding assistants",
+  "theme": "palm",
+  "primaryColor": "#10b981",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "MCP Server",
+            "pages": [
+              "mcp/overview",
+              "mcp/cursor",
+              "mcp/claude-code",
+              "mcp/opencode",
+              "mcp/all-clients",
+              "mcp/configuration",
+              "mcp/tools-reference"
+            ]
+          },
+          {
+            "group": "SDK",
+            "pages": [
+              "sdk/overview",
+              "sdk/installation",
+              "sdk/client",
+              "sdk/search-library",
+              "sdk/get-context"
+            ]
+          },
+          {
+            "group": "AI SDK Integration",
+            "pages": [
+              "ai-sdk/overview",
+              "ai-sdk/tools",
+              "ai-sdk/agent"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/best-practices",
+              "guides/using-rules",
+              "guides/specifying-versions",
+              "guides/adding-libraries",
+              "guides/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI Reference",
+        "groups": [
+          {
+            "group": "CLI",
+            "pages": [
+              "cli/overview",
+              "cli/setup",
+              "cli/skills",
+              "cli/auth"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "MCP server providing up-to-date documentation for 30+ AI coding clients",
+    "Real-time library documentation and code examples from Context7 API",
+    "JavaScript/TypeScript SDK for programmatic access",
+    "Vercel AI SDK integration with tools and pre-configured agent",
+    "CLI tool for MCP setup and skills management",
+    "OAuth 2.0 and API key authentication support",
+    "Version-specific documentation retrieval"
+  ],
+  "publicApiSurface": [
+    "MCP Tools: resolve-library-id, query-docs",
+    "SDK: Context7.searchLibrary(query, libraryName, options)",
+    "SDK: Context7.getContext(query, libraryId, options)",
+    "AI SDK: resolveLibraryId(config)",
+    "AI SDK: queryDocs(config)",
+    "AI SDK: Context7Agent(config)",
+    "CLI: ctx7 setup [--cursor|--claude|--opencode]",
+    "CLI: ctx7 skills search <query>",
+    "CLI: ctx7 skills install <repo>",
+    "CLI: ctx7 skills list",
+    "CLI: ctx7 skills remove <name>",
+    "CLI: ctx7 auth login",
+    "CLI: ctx7 auth logout"
+  ]
+}
