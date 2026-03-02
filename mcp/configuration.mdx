@@ -1,0 +1,499 @@
+---
+title: 'Configuration'
+description: 'Configure Context7 MCP Server with API keys, OAuth, and environment variables'
+---
+
+# Configuration
+
+Context7 MCP Server supports various configuration options for authentication, transport, and behavior customization.
+
+## Authentication
+
+Context7 supports two authentication methods: API Key and OAuth 2.0.
+
+### API Key Authentication
+
+API key authentication is the simplest method and works with both local and remote connections.
+
+#### Getting an API Key
+
+1. Visit [context7.com/dashboard](https://context7.com/dashboard)
+2. Sign up or log in
+3. Generate a new API key
+4. API keys start with the prefix `ctx7sk`
+
+<Note>
+  Free API keys provide higher rate limits than anonymous access. Paid plans offer professional and enterprise limits.
+</Note>
+
+#### Passing API Keys
+
+There are multiple ways to provide your API key:
+
+<Tabs>
+  <Tab title="Command Line Flag">
+    Pass the API key directly via the `--api-key` flag:
+
+    ```json
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+        }
+      }
+    }
+    ```
+
+    **Pros:** Simple and explicit  
+    **Cons:** API key visible in config file
+  </Tab>
+
+  <Tab title="Environment Variable">
+    Set the `CONTEXT7_API_KEY` environment variable:
+
+    ```bash
+    export CONTEXT7_API_KEY="YOUR_API_KEY"
+    ```
+
+    Then configure without the flag:
+
+    ```json
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp"]
+        }
+      }
+    }
+    ```
+
+    Or pass via `env` object:
+
+    ```json
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp"],
+          "env": {
+            "CONTEXT7_API_KEY": "YOUR_API_KEY"
+          }
+        }
+      }
+    }
+    ```
+
+    **Pros:** API key not in config file  
+    **Cons:** Need to set environment variable
+  </Tab>
+
+  <Tab title="HTTP Header">
+    For remote connections, pass the API key via HTTP header:
+
+    ```json
+    {
+      "mcpServers": {
+        "context7": {
+          "url": "https://mcp.context7.com/mcp",
+          "headers": {
+            "CONTEXT7_API_KEY": "YOUR_API_KEY"
+          }
+        }
+      }
+    }
+    ```
+
+    Alternative header names also supported:
+    - `Context7-API-Key`
+    - `X-API-Key`
+    - `Authorization: Bearer YOUR_API_KEY`
+
+    **Pros:** Standard HTTP pattern  
+    **Cons:** Remote only
+  </Tab>
+</Tabs>
+
+### OAuth 2.0 Authentication
+
+OAuth provides secure, token-based authentication for remote connections.
+
+#### Requirements
+
+- Remote HTTP connection only (not available for local stdio)
+- MCP client must support [MCP OAuth specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization)
+
+#### Configuration
+
+Change the endpoint from `/mcp` to `/mcp/oauth`:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp/oauth"
+    }
+  }
+}
+```
+
+The OAuth flow will be handled automatically by your MCP client.
+
+#### OAuth Endpoints
+
+Context7 implements OAuth 2.0 Protected Resource Metadata ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)):
+
+**Protected Resource Metadata:**
+```
+GET https://mcp.context7.com/.well-known/oauth-protected-resource
+```
+
+**Authorization Server Metadata:**
+```
+GET https://mcp.context7.com/.well-known/oauth-authorization-server
+```
+
+**Supported Scopes:**
+- `profile` - Access to user profile information
+- `email` - Access to user email address
+
+**Bearer Methods:**
+- `header` - Bearer token in Authorization header
+
+#### OAuth vs API Key
+
+<CardGroup cols={2}>
+  <Card title="API Key" icon="key">
+    **Best for:**
+    - Local connections
+    - Simple setup
+    - Single-user environments
+    - Testing and development
+
+    **Pros:**
+    - Works with both local and remote
+    - Simple configuration
+    - Direct access
+
+    **Cons:**
+    - Manual key management
+    - No automatic refresh
+  </Card>
+
+  <Card title="OAuth 2.0" icon="lock">
+    **Best for:**
+    - Remote connections
+    - Team environments
+    - Enterprise deployments
+    - Enhanced security
+
+    **Pros:**
+    - Automatic token refresh
+    - Revocable access
+    - Scoped permissions
+
+    **Cons:**
+    - Remote only
+    - Requires OAuth support
+  </Card>
+</CardGroup>
+
+## Transport Configuration
+
+Context7 MCP Server supports two transport modes.
+
+### stdio (Local)
+
+Standard input/output transport for local connections.
+
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+**Startup:**
+```bash
+npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+```
+
+**Characteristics:**
+- Runs on your local machine
+- Communicates via stdin/stdout
+- Default transport mode
+- Maximum privacy
+
+### HTTP (Remote)
+
+HTTP transport for remote server connections.
+
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**Startup:**
+```bash
+npx -y @upstash/context7-mcp --transport http --port 3000
+```
+
+**Characteristics:**
+- Can run locally or remotely
+- RESTful HTTP API
+- Supports OAuth
+- Scalable for teams
+
+**Available Endpoints:**
+- `/mcp` - Anonymous/API key access
+- `/mcp/oauth` - OAuth 2.0 protected access
+- `/ping` - Health check
+- `/.well-known/oauth-protected-resource` - OAuth metadata
+- `/.well-known/oauth-authorization-server` - OAuth server metadata
+
+## Environment Variables
+
+Context7 MCP Server reads the following environment variables:
+
+<ParamField path="CONTEXT7_API_KEY" type="string">
+  Your Context7 API key. Get one at [context7.com/dashboard](https://context7.com/dashboard)
+  
+  **Format:** Starts with `ctx7sk`  
+  **Example:** `ctx7sk_abc123xyz789`
+</ParamField>
+
+<ParamField path="CONTEXT7_API_URL" type="string">
+  Override the Context7 API base URL.
+  
+  **Default:** `https://context7.com/api`  
+  **Example:** `https://api.context7.com`
+</ParamField>
+
+<ParamField path="RESOURCE_URL" type="string">
+  Override the MCP resource URL for OAuth.
+  
+  **Default:** `https://mcp.context7.com`  
+  **Example:** `https://custom-mcp.example.com`
+</ParamField>
+
+<ParamField path="AUTH_SERVER_URL" type="string">
+  Override the OAuth authorization server URL.
+  
+  **Default:** `https://context7.com`  
+  **Example:** `https://auth.example.com`
+</ParamField>
+
+<ParamField path="HTTPS_PROXY" type="string">
+  HTTP/HTTPS proxy URL for outgoing requests.
+  
+  **Aliases:** `https_proxy`, `HTTP_PROXY`, `http_proxy`  
+  **Example:** `http://proxy.example.com:8080`
+</ParamField>
+
+## Command Line Options
+
+When running Context7 MCP Server locally:
+
+<ParamField path="--transport" type="string" default="stdio">
+  Transport type to use.
+  
+  **Options:** `stdio`, `http`  
+  **Example:** `--transport http`
+</ParamField>
+
+<ParamField path="--port" type="number" default="3000">
+  Port for HTTP transport (only valid with `--transport http`).
+  
+  **Example:** `--port 8080`
+</ParamField>
+
+<ParamField path="--api-key" type="string">
+  API key for authentication (only valid with `--transport stdio`).
+  
+  **Example:** `--api-key ctx7sk_abc123`
+</ParamField>
+
+### Valid Option Combinations
+
+<CodeGroup>
+  ```bash stdio transport
+  npx -y @upstash/context7-mcp --transport stdio --api-key YOUR_API_KEY
+  ```
+
+  ```bash HTTP transport
+  npx -y @upstash/context7-mcp --transport http --port 3000
+  ```
+
+  ```bash Default (stdio)
+  npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+  ```
+</CodeGroup>
+
+<Warning>
+  **Invalid combinations:**
+  - `--api-key` with `--transport http` (use headers instead)
+  - `--port` with `--transport stdio` (stdio doesn't use ports)
+</Warning>
+
+## Proxy Configuration
+
+Context7 automatically detects and uses proxy settings from environment variables:
+
+```bash
+# Set proxy
+export HTTPS_PROXY="http://proxy.example.com:8080"
+
+# Run Context7
+npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+```
+
+Supported proxy environment variables (in order of precedence):
+1. `HTTPS_PROXY`
+2. `https_proxy`
+3. `HTTP_PROXY`
+4. `http_proxy`
+
+## Rate Limits
+
+Context7 applies rate limits based on your authentication:
+
+### Anonymous (No API Key)
+
+- Limited requests per hour
+- Suitable for testing only
+- May encounter 429 errors during heavy use
+
+### Free API Key
+
+- Higher rate limits
+- Suitable for regular development
+- Generous quota for individual developers
+
+### Paid Plans
+
+- Professional rate limits
+- Enterprise-grade quotas
+- Priority support
+
+Visit [context7.com/plans](https://context7.com/plans) for detailed limits.
+
+### Handling Rate Limits
+
+When you hit rate limits, you'll receive:
+
+```
+Rate limited or quota exceeded. Upgrade your plan at 
+https://context7.com/plans for higher limits.
+```
+
+**Solutions:**
+1. Add a free API key if using anonymous access
+2. Wait for rate limit window to reset
+3. Upgrade to a paid plan
+
+## Security Best Practices
+
+<Warning>
+  Never commit API keys to version control. Use environment variables or secure secret management.
+</Warning>
+
+### Recommended Practices
+
+1. **Use environment variables** for API keys
+2. **Add to .gitignore:**
+   ```gitignore
+   .cursor/mcp.json
+   .env
+   **/config.json
+   ```
+3. **Rotate keys regularly** from the dashboard
+4. **Use OAuth** for team environments
+5. **Never share API keys** in prompts or queries
+
+### What Not to Send
+
+Do not include in your queries:
+- API keys, passwords, or credentials
+- Personal identifiable information (PII)
+- Proprietary or confidential code
+- Customer data
+- Security tokens
+
+Queries are sent to Context7 API for processing and intelligent reranking.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Invalid API key error">
+    ```
+    Invalid API key. Please check your API key. 
+    API keys should start with 'ctx7sk' prefix.
+    ```
+
+    **Solutions:**
+    1. Verify key starts with `ctx7sk`
+    2. Check for extra spaces or quotes
+    3. Regenerate key from dashboard
+    4. Ensure key is active (not revoked)
+  </Accordion>
+
+  <Accordion title="Rate limit errors">
+    ```
+    Rate limited or quota exceeded.
+    ```
+
+    **Solutions:**
+    1. Add API key if using anonymous access
+    2. Wait for rate limit window to reset
+    3. Upgrade plan at [context7.com/plans](https://context7.com/plans)
+    4. Reduce request frequency
+  </Accordion>
+
+  <Accordion title="Connection errors">
+    **For HTTP transport:**
+    1. Check internet connectivity
+    2. Verify URL is correct
+    3. Test endpoint: `curl https://mcp.context7.com/ping`
+    4. Check firewall settings
+    5. Verify proxy configuration
+
+    **For stdio transport:**
+    1. Ensure Node.js is installed
+    2. Clear npx cache: `npx clear-npx-cache`
+    3. Test manually: `npx -y @upstash/context7-mcp`
+  </Accordion>
+
+  <Accordion title="OAuth errors">
+    1. Ensure using `/mcp/oauth` endpoint
+    2. Verify client supports MCP OAuth spec
+    3. Check OAuth is only for remote (HTTP) transport
+    4. Try API key authentication instead
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+    Explore available MCP tools
+  </Card>
+  
+  <Card title="All Clients" icon="grid" href="/mcp/all-clients">
+    See all supported MCP clients
+  </Card>
+</CardGroup>

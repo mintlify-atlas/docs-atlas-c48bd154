@@ -1,0 +1,402 @@
+---
+title: ctx7 auth
+description: Manage authentication with Context7
+---
+
+The `ctx7 auth` commands manage authentication with Context7 for accessing authenticated features like skill generation and suggestions.
+
+## Subcommands
+
+<CardGroup cols={3}>
+  <Card title="login" icon="right-to-bracket">
+    Log in to Context7
+  </Card>
+  
+  <Card title="logout" icon="right-from-bracket">
+    Log out of Context7
+  </Card>
+  
+  <Card title="whoami" icon="user">
+    Show current login status
+  </Card>
+</CardGroup>
+
+---
+
+## login
+
+Authenticate with Context7 using OAuth.
+
+### Usage
+
+```bash
+ctx7 login [options]
+```
+
+### Options
+
+#### `--no-browser`
+
+Don't open the browser automatically. Displays the authentication URL for manual access.
+
+```bash
+ctx7 login --no-browser
+```
+
+### How It Works
+
+1. **Generate OAuth Parameters**: Creates PKCE challenge and state parameter
+2. **Open Browser**: Opens Context7 login page (unless `--no-browser` is used)
+3. **Wait for Callback**: Starts local server to receive OAuth callback
+4. **Exchange Code**: Exchanges authorization code for access and refresh tokens
+5. **Save Tokens**: Stores tokens securely in `~/.context7/tokens.json`
+
+### Examples
+
+#### Standard Login
+
+```bash
+ctx7 login
+```
+
+Output:
+```
+Opening browser to log in...
+
+If the browser didn't open, visit this URL:
+https://context7.com/oauth/authorize?client_id=...
+
+⠋ Waiting for login...
+✔ Login successful!
+
+You can now use authenticated Context7 features.
+```
+
+#### Manual Browser Login
+
+```bash
+ctx7 login --no-browser
+```
+
+Output:
+```
+Open this URL in your browser:
+https://context7.com/oauth/authorize?client_id=...
+
+⠋ Waiting for login...
+```
+
+This is useful when:
+- Running in SSH sessions
+- Browser auto-open is not working
+- Using a different browser than the system default
+
+#### Already Logged In
+
+```bash
+ctx7 login
+```
+
+Output:
+```
+You are already logged in.
+Run 'ctx7 logout' first if you want to log in with a different account.
+```
+
+---
+
+## logout
+
+Log out of Context7 by clearing stored authentication tokens.
+
+### Usage
+
+```bash
+ctx7 logout
+```
+
+### Examples
+
+#### Successful Logout
+
+```bash
+ctx7 logout
+```
+
+Output:
+```
+Logged out successfully.
+```
+
+#### Not Logged In
+
+```bash
+ctx7 logout
+```
+
+Output:
+```
+You are not logged in.
+```
+
+---
+
+## whoami
+
+Show your current authentication status and user information.
+
+### Usage
+
+```bash
+ctx7 whoami
+```
+
+### Examples
+
+#### Logged In
+
+```bash
+ctx7 whoami
+```
+
+Output:
+```
+Logged in
+Name:     John Doe
+Email:    john@example.com
+```
+
+#### Not Logged In
+
+```bash
+ctx7 whoami
+```
+
+Output:
+```
+Not logged in.
+Run 'ctx7 login' to authenticate.
+```
+
+#### Session Expired
+
+```bash
+ctx7 whoami
+```
+
+Output:
+```
+Logged in
+(Session may be expired - run 'ctx7 login' to refresh)
+```
+
+---
+
+## Authentication Flow
+
+### OAuth with PKCE
+
+Context7 uses OAuth 2.0 with PKCE (Proof Key for Code Exchange) for secure authentication:
+
+1. **Code Verifier**: Random string generated locally
+2. **Code Challenge**: SHA-256 hash of the code verifier
+3. **Authorization**: User authorizes in browser
+4. **Callback**: Authorization code sent to local callback server
+5. **Token Exchange**: Code + verifier exchanged for tokens
+6. **Storage**: Tokens stored securely on local machine
+
+### Token Storage
+
+Tokens are stored in:
+```
+~/.context7/tokens.json
+```
+
+This file contains:
+- `access_token`: Used for API requests
+- `refresh_token`: Used to obtain new access tokens
+- `expires_at`: Token expiration timestamp
+
+<Warning>
+Never share or commit your `tokens.json` file. It contains sensitive authentication credentials.
+</Warning>
+
+### Token Expiration
+
+Access tokens expire after a period of time. When a token expires:
+
+1. The CLI automatically uses the refresh token to get a new access token
+2. If the refresh token is also expired, you'll be prompted to log in again
+
+---
+
+## Authenticated Features
+
+These features require authentication:
+
+### Skill Generation
+
+```bash
+ctx7 skills generate
+```
+
+Generating custom skills requires a Context7 account.
+
+### Enhanced Suggestions
+
+```bash
+ctx7 skills suggest
+```
+
+Authenticated users receive personalized skill suggestions.
+
+### Setup with Auto-Generated API Key
+
+```bash
+ctx7 setup
+```
+
+The setup command can automatically generate an API key for the MCP server when authenticated.
+
+---
+
+## Account Tiers
+
+Different account tiers provide different limits:
+
+| Feature | Free | Pro | Unlimited |
+|---------|------|-----|----------|
+| **Skill Search** | ✓ | ✓ | ✓ |
+| **Skill Install** | ✓ | ✓ | ✓ |
+| **Skill Suggestions** | ✓ | ✓ | ✓ |
+| **Skill Generation** | 3/week | 10/week | Unlimited |
+| **API Keys** | 1 | 5 | Unlimited |
+
+<Info>
+Upgrade your account at [context7.com/dashboard](https://context7.com/dashboard)
+</Info>
+
+---
+
+## Troubleshooting
+
+### Login Failed
+
+If login fails:
+
+1. **Check Internet Connection**: Ensure you can access context7.com
+2. **Try Again**: Run `ctx7 login` again
+3. **Manual URL**: Use `ctx7 login --no-browser` and copy the URL
+4. **Clear Tokens**: Run `ctx7 logout` then `ctx7 login`
+
+### Port Already in Use
+
+If the OAuth callback server can't start:
+
+```
+Error: Port 8080 is already in use
+```
+
+Solution:
+1. Close applications using port 8080
+2. Try login again
+3. The CLI will automatically try alternative ports
+
+### Browser Doesn't Open
+
+If your browser doesn't open automatically:
+
+1. Use `ctx7 login --no-browser`
+2. Manually copy and open the URL shown
+3. Complete authentication in your browser
+
+### Token File Corrupted
+
+If you see token-related errors:
+
+```bash
+# Remove corrupted token file
+rm ~/.context7/tokens.json
+
+# Login again
+ctx7 login
+```
+
+### Permission Errors
+
+If you can't write tokens:
+
+```bash
+# Fix permissions
+mkdir -p ~/.context7
+chmod 700 ~/.context7
+chmod 600 ~/.context7/tokens.json
+```
+
+---
+
+## Security Best Practices
+
+### Protect Your Tokens
+
+- Never share `~/.context7/tokens.json`
+- Don't commit tokens to version control
+- Use `ctx7 logout` on shared machines
+- Regenerate tokens if compromised
+
+### API Keys vs OAuth
+
+For MCP server configuration:
+
+**OAuth (Recommended for personal use)**
+```bash
+ctx7 setup  # Automatically generates API key
+```
+
+**Manual API Key (For CI/CD, shared configs)**
+```bash
+ctx7 setup --api-key sk_your_key_here
+```
+
+### Multiple Accounts
+
+To switch accounts:
+
+```bash
+# Logout from current account
+ctx7 logout
+
+# Login with different account
+ctx7 login
+```
+
+---
+
+## Environment Variables
+
+### `CONTEXT7_TOKEN`
+
+Override stored token with environment variable:
+
+```bash
+export CONTEXT7_TOKEN="your_access_token"
+ctx7 skills generate
+```
+
+Useful for:
+- CI/CD pipelines
+- Automation scripts
+- Testing
+
+<Warning>
+Be careful when using tokens in environment variables, as they may be exposed in logs or process listings.
+</Warning>
+
+---
+
+## See Also
+
+- [CLI Overview](/cli/overview)
+- [Setup Command](/cli/setup)
+- [Skills Commands](/cli/skills)
+- [Context7 Dashboard](https://context7.com/dashboard)

@@ -1,0 +1,827 @@
+---
+title: ctx7 skills
+description: Search, install, list, and manage AI coding skills
+---
+
+The `ctx7 skills` command group provides tools for discovering and managing AI coding skills.
+
+## Subcommands
+
+<CardGroup cols={2}>
+  <Card title="install" icon="download">
+    Install skills from a GitHub repository
+  </Card>
+  
+  <Card title="search" icon="magnifying-glass">
+    Search for skills across indexed repositories
+  </Card>
+  
+  <Card title="list" icon="list">
+    List installed skills
+  </Card>
+  
+  <Card title="remove" icon="trash">
+    Remove an installed skill
+  </Card>
+  
+  <Card title="info" icon="circle-info">
+    Show skills available in a repository
+  </Card>
+  
+  <Card title="suggest" icon="lightbulb">
+    Get skill suggestions based on project dependencies
+  </Card>
+  
+  <Card title="generate" icon="wand-magic-sparkles">
+    Generate a custom skill using AI
+  </Card>
+</CardGroup>
+
+---
+
+## install
+
+Install skills from a GitHub repository.
+
+### Usage
+
+```bash
+ctx7 skills install <repository> [skill] [options]
+```
+
+**Aliases:** `i`, `add`, `si` (global alias)
+
+### Arguments
+
+#### `<repository>`
+
+GitHub repository in the format `/owner/repo`.
+
+```bash
+ctx7 skills install /anthropics/skills
+```
+
+#### `[skill]`
+
+Optional: Install a specific skill by name.
+
+```bash
+ctx7 skills install /anthropics/skills pdf
+```
+
+### Options
+
+#### `--all`
+
+Install all skills from the repository without prompting.
+
+```bash
+ctx7 skills install /anthropics/skills --all
+```
+
+#### `--global`
+
+Install to the global skills directory instead of the current project.
+
+```bash
+ctx7 skills install /anthropics/skills --global
+```
+
+#### `--claude`
+
+Install to Claude Code's skills directory (`.claude/skills/`).
+
+```bash
+ctx7 skills install /anthropics/skills --claude
+```
+
+#### `--cursor`
+
+Install to Cursor's skills directory (`.cursor/skills/`).
+
+```bash
+ctx7 skills install /anthropics/skills --cursor
+```
+
+#### `--universal`
+
+Install to the universal skills directory (`.agents/skills/`).
+
+```bash
+ctx7 skills install /anthropics/skills --universal
+```
+
+#### `--antigravity`
+
+Install to Antigravity's skills directory (`.agent/skills/`).
+
+```bash
+ctx7 skills install /anthropics/skills --antigravity
+```
+
+### Examples
+
+#### Install All Skills
+
+```bash
+ctx7 skills install /anthropics/skills --all
+```
+
+Output:
+```
+⠋ Fetching skills from /anthropics/skills...
+✔ Found 3 skill(s)
+⠋ Installing skills...
+✔ Installed 3 skill(s)
+
+Universal .agents/skills/
+  + pdf
+  + mintlify
+  + python
+```
+
+#### Install Specific Skill
+
+```bash
+ctx7 skills install /anthropics/skills pdf
+```
+
+Output:
+```
+⠋ Fetching skill: pdf...
+✔ Found skill: pdf
+⠋ Installing skills...
+✔ Installed 1 skill(s)
+
+Universal .agents/skills/
+  + pdf
+```
+
+#### Interactive Selection
+
+```bash
+ctx7 skills install /anthropics/skills
+```
+
+Output:
+```
+✔ Found 3 skill(s)
+
+? Select skills to install:
+           Installs  Trust(0-10)
+ ❯◉ 1. pdf         150       8.5
+  ◉ 2. mintlify    89        9.2
+  ◯ 3. python      234       7.8
+
+✔ Installed 2 skill(s)
+
+Universal .agents/skills/
+  + pdf
+  + mintlify
+```
+
+#### Install to Multiple Agents
+
+```bash
+ctx7 skills install /anthropics/skills --cursor --claude
+```
+
+Output:
+```
+✔ Installed 3 skill(s)
+
+Claude Code .claude/skills/
+  + pdf
+  + mintlify
+  + python
+
+Cursor .cursor/skills/
+  + pdf
+  + mintlify
+  + python
+```
+
+---
+
+## search
+
+Search for skills across all indexed repositories.
+
+### Usage
+
+```bash
+ctx7 skills search <keywords...> [options]
+```
+
+**Aliases:** `s`, `ss` (global alias)
+
+### Arguments
+
+#### `<keywords...>`
+
+Search keywords (space-separated).
+
+```bash
+ctx7 skills search react hooks
+ctx7 skills search pdf processing
+ctx7 skills search typescript best practices
+```
+
+### Examples
+
+#### Search and Install
+
+```bash
+ctx7 skills search pdf
+```
+
+Output:
+```
+⠋ Searching for "pdf"...
+✔ Found 5 skill(s)
+
+? Select skills to install:
+           Installs  Trust(0-10)
+ ❯◯ 1. pdf         150       8.5
+  ◯ 2. pdf-parse   45        7.2
+  ◯ 3. pdfkit      89        8.1
+  ◯ 4. pdf.js      234       9.0
+  ◯ 5. react-pdf   178       8.3
+
+? Select installation targets:
+ ❯◉ Universal (.agents/skills/)
+  ◯ Claude Code (.claude/skills/)
+  ◉ Cursor (.cursor/skills/)
+
+✔ Installed 1 skill(s)
+
+Universal .agents/skills/
+  + pdf
+
+Cursor .cursor/skills/
+  + pdf
+```
+
+#### Multi-word Search
+
+```bash
+ctx7 skills search react hooks patterns
+```
+
+Searches for skills matching "react hooks patterns".
+
+---
+
+## list
+
+List installed skills.
+
+### Usage
+
+```bash
+ctx7 skills list [options]
+```
+
+**Aliases:** `ls`
+
+### Options
+
+#### `--global`
+
+List global skills instead of project-level skills.
+
+```bash
+ctx7 skills list --global
+```
+
+#### `--claude`, `--cursor`, `--universal`, `--antigravity`
+
+List skills for a specific agent.
+
+```bash
+ctx7 skills list --claude
+ctx7 skills list --cursor
+```
+
+### Examples
+
+#### List All Skills
+
+```bash
+ctx7 skills list
+```
+
+Output:
+```
+Universal .agents/skills/
+  pdf
+  mintlify
+  python
+
+Claude Code .claude/skills/
+  pdf
+  typescript
+
+Cursor .cursor/skills/
+  pdf
+  react
+```
+
+#### List Global Skills
+
+```bash
+ctx7 skills list --global
+```
+
+Output:
+```
+Universal ~/.config/agents/skills/
+  doc-reader
+  doc-author
+
+Claude Code ~/.config/claude/skills/
+  context7
+```
+
+#### List Skills for Specific Agent
+
+```bash
+ctx7 skills list --cursor
+```
+
+Output:
+```
+Cursor .cursor/skills/
+  pdf
+  react
+  typescript
+```
+
+---
+
+## remove
+
+Remove an installed skill.
+
+### Usage
+
+```bash
+ctx7 skills remove <name> [options]
+```
+
+**Aliases:** `rm`, `delete`
+
+### Arguments
+
+#### `<name>`
+
+The name of the skill to remove.
+
+```bash
+ctx7 skills remove pdf
+```
+
+### Options
+
+#### `--global`
+
+Remove from global skills instead of project skills.
+
+```bash
+ctx7 skills remove pdf --global
+```
+
+#### `--claude`, `--cursor`, `--universal`, `--antigravity`
+
+Remove from a specific agent's skills directory.
+
+```bash
+ctx7 skills remove pdf --cursor
+```
+
+### Examples
+
+#### Remove with Interactive Selection
+
+```bash
+ctx7 skills remove pdf
+```
+
+Output:
+```
+? Select target:
+ ❯ Universal (.agents/skills/)
+   Claude Code (.claude/skills/)
+   Cursor (.cursor/skills/)
+
+✔ Removed skill: pdf
+```
+
+#### Remove from Specific Agent
+
+```bash
+ctx7 skills remove pdf --cursor
+```
+
+Output:
+```
+✔ Removed skill: pdf
+```
+
+#### Remove Global Skill
+
+```bash
+ctx7 skills remove doc-reader --global --universal
+```
+
+---
+
+## info
+
+Show information about skills in a repository.
+
+### Usage
+
+```bash
+ctx7 skills info <repository>
+```
+
+### Arguments
+
+#### `<repository>`
+
+GitHub repository in the format `/owner/repo`.
+
+```bash
+ctx7 skills info /anthropics/skills
+```
+
+### Examples
+
+```bash
+ctx7 skills info /anthropics/skills
+```
+
+Output:
+```
+⠋ Fetching skills from /anthropics/skills...
+✔ Found 3 skill(s)
+
+• pdf
+    Comprehensive PDF processing and manipulation
+    URL: https://github.com/anthropics/skills/tree/main/pdf
+
+• mintlify
+    Documentation authoring with Mintlify
+    URL: https://github.com/anthropics/skills/tree/main/mintlify
+
+• python
+    Python best practices and patterns
+    URL: https://github.com/anthropics/skills/tree/main/python
+
+Quick commands:
+  Install all: ctx7 skills install /anthropics/skills --all
+  Install one: ctx7 skills install /anthropics/skills pdf
+```
+
+---
+
+## suggest
+
+Get skill suggestions based on your project's dependencies.
+
+### Usage
+
+```bash
+ctx7 skills suggest [options]
+```
+
+**Aliases:** `ssg` (global alias)
+
+### Options
+
+#### `--global`
+
+Install suggested skills globally.
+
+```bash
+ctx7 skills suggest --global
+```
+
+#### `--claude`, `--cursor`, `--universal`, `--antigravity`
+
+Install to specific agent directories.
+
+```bash
+ctx7 skills suggest --cursor
+```
+
+### How It Works
+
+1. Scans `package.json`, `requirements.txt`, `Gemfile`, `go.mod`, etc.
+2. Detects project dependencies
+3. Queries Context7 for relevant skills
+4. Presents suggestions for installation
+
+### Examples
+
+```bash
+ctx7 skills suggest
+```
+
+Output:
+```
+⠋ Scanning project dependencies...
+✔ Found 12 dependencies
+⠋ Finding matching skills...
+✔ Found 5 relevant skill(s)
+
+? Select skills to install:
+           Installs  Trust(0-10)  Relevant
+ ❯◉ 1. react       312       9.1          react
+  ◉ 2. nextjs      256       9.0          next
+  ◯ 3. typescript  178       8.9          typescript
+  ◯ 4. tailwind    145       8.7          tailwindcss
+  ◯ 5. prisma      98        8.5          @prisma/client
+
+✔ Installed 2 skill(s)
+
+Universal .agents/skills/
+  + react
+  + nextjs
+```
+
+---
+
+## generate
+
+Generate a custom skill using AI based on library documentation.
+
+### Usage
+
+```bash
+ctx7 skills generate [options]
+```
+
+**Aliases:** `gen`, `g`
+
+### Options
+
+#### `-o, --output <dir>`
+
+Output directory for the generated skill (defaults to current directory).
+
+```bash
+ctx7 skills generate --output ./custom-skills
+```
+
+#### `--all`
+
+Generate for all detected IDEs.
+
+```bash
+ctx7 skills generate --all
+```
+
+#### `--global`
+
+Generate in the global skills directory.
+
+```bash
+ctx7 skills generate --global
+```
+
+#### `--claude`, `--cursor`, `--universal`, `--antigravity`
+
+Generate for specific agent directories.
+
+```bash
+ctx7 skills generate --cursor
+```
+
+### How It Works
+
+1. **Describe Expertise**: You describe what your agent should become an expert at
+2. **Select Sources**: Choose from relevant documentation sources on Context7
+3. **Answer Questions**: Clarify scope, constraints, and decision-making patterns
+4. **AI Generation**: Context7 reads documentation and generates a skill
+5. **Review & Edit**: Preview, edit, and request changes before installing
+6. **Install**: Save the skill to your chosen agent directories
+
+<Note>
+Skill generation requires authentication. You'll be prompted to log in if not already authenticated.
+</Note>
+
+### Generation Quota
+
+| Tier | Weekly Limit |
+|------|-------------|
+| **Free** | 3 generations |
+| **Pro** | 10 generations |
+| **Unlimited** | Unlimited |
+
+### Examples
+
+#### Generate a Skill
+
+```bash
+ctx7 skills generate
+```
+
+Output:
+```
+Authentication required. Logging in...
+
+Opening browser to log in...
+✔ Login successful!
+
+What should your agent become an expert at?
+
+Skills should encode best practices, constraints, and decision-making —
+not step-by-step tutorials or one-off tasks.
+
+Examples:
+  ✕ "Deploy a Next.js app to Vercel"
+  ✓ "Best practices and constraints for deploying Next.js apps to Vercel"
+
+  ✕ "Use Tailwind for responsive design"
+  ✓ "Responsive layout decision-making with Tailwind CSS"
+
+? Describe the expertise: OAuth authentication patterns and pitfalls with NextAuth.js
+
+⠋ Finding relevant sources...
+✔ Found 3 relevant sources
+
+? Select sources:
+ ❯◉ 1. NextAuth.js  (next-auth/next-auth)
+  ◉ 2. Next.js Auth (vercel/next.js)
+  ◯ 3. OAuth 2.0 (websites/oauth.net)
+
+⠋ Preparing follow-up questions to clarify scope and constraints...
+✔ Questions prepared
+
+✓ [1/3] What authentication providers should be covered?
+  GitHub, Google, credentials
+
+✓ [2/3] Should the skill include session management?
+  Yes, including JWT and database sessions
+
+✓ [3/3] What security considerations are most important?
+  CSRF protection, secure callbacks, token rotation
+
+⠋ Reading selected Context7 sources to generate the skill...
+
+  • NextAuth.js Configuration
+    Configure NextAuth.js with providers, callbacks, and session strategies.
+    Use the `providers` array to define authentication methods. Configure
+    callbacks for session and JWT customization...
+
+  • OAuth Security Patterns
+    Implement CSRF protection using the `state` parameter. Validate redirect
+    URIs against allowlists. Rotate refresh tokens after each use...
+
+✔ Read Context7 sources
+⠋ Generating skill content...
+✔ Generated skill for "nextauth-oauth-patterns"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated Skill: nextauth-oauth-patterns
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# NextAuth.js OAuth Authentication Patterns
+
+This skill provides expertise in implementing OAuth authentication
+with NextAuth.js, focusing on security, session management, and
+common pitfalls.
+
+## Provider Configuration
+
+When configuring OAuth providers:
+- Use environment variables for client IDs and secrets
+- Configure appropriate scopes for each provider
+- Implement provider-specific error handling
+
+...
+
+... 150 more lines
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+? What would you like to do?
+ ❯ ✓ Install skill (save locally)
+   ⤢ Edit skill in editor
+   ✎ Request changes
+   ✕ Cancel
+```
+
+#### Request Changes
+
+After reviewing the generated skill, you can request modifications:
+
+```
+? What would you like to do? Request changes
+
+? What changes would you like?
+Add more details about refresh token rotation
+
+⠋ Regenerating skill with your feedback...
+✔ Generated skill for "nextauth-oauth-patterns"
+```
+
+#### Install Generated Skill
+
+```
+? What would you like to do? Install skill (save locally)
+
+? Select installation targets:
+ ❯◉ Universal (.agents/skills/)
+  ◯ Claude Code (.claude/skills/)
+  ◉ Cursor (.cursor/skills/)
+
+⠋ Writing skill files...
+✔ Created skill in 2 location(s)
+
+Skill saved successfully
+  .agents/skills/nextauth-oauth-patterns
+  .cursor/skills/nextauth-oauth-patterns
+```
+
+---
+
+## Common Patterns
+
+### Install and Test Workflow
+
+```bash
+# Search for skills
+ctx7 skills search typescript
+
+# Install to current project
+ctx7 skills install /user/repo typescript
+
+# List installed skills
+ctx7 skills list
+
+# Test in your agent, then remove if not needed
+ctx7 skills remove typescript
+```
+
+### Multi-Agent Setup
+
+```bash
+# Install globally for all agents
+ctx7 skills install /anthropics/skills --all --global \
+  --universal --claude --cursor
+
+# List what's installed for each
+ctx7 skills list --global --claude
+ctx7 skills list --global --cursor
+ctx7 skills list --global --universal
+```
+
+### Project-Specific Skills
+
+```bash
+# Install to project directory
+ctx7 skills install /user/repo --cursor
+
+# Install suggested skills for project
+ctx7 skills suggest
+
+# Generate custom skill for project
+ctx7 skills generate
+```
+
+## Troubleshooting
+
+### Skill Not Found
+
+If a skill can't be found:
+
+```bash
+# Check repository info
+ctx7 skills info /owner/repo
+
+# Search for similar skills
+ctx7 skills search <keyword>
+```
+
+### Permission Denied
+
+Fix directory permissions:
+
+```bash
+sudo chown -R $(whoami) "~/.config/agents"
+sudo chown -R $(whoami) "~/.config/claude"
+sudo chown -R $(whoami) "~/.cursor"
+```
+
+### Skill Not Loading
+
+After installing skills, restart your AI coding agent to load them.
+
+## See Also
+
+- [CLI Overview](/cli/overview)
+- [Setup Command](/cli/setup)
+- [Auth Commands](/cli/auth)

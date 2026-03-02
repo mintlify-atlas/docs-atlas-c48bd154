@@ -1,0 +1,351 @@
+---
+title: ctx7 setup
+description: Configure Context7 MCP and rule for your AI coding agent
+---
+
+The `ctx7 setup` command configures Context7's Model Context Protocol (MCP) server and installs the Context7 rule and skill for your AI coding agent.
+
+## Usage
+
+```bash
+ctx7 setup [options]
+```
+
+## Options
+
+### Agent Selection
+
+#### `--claude`
+
+Set up Context7 for Claude Code.
+
+```bash
+ctx7 setup --claude
+```
+
+Configures:
+- MCP server in `~/.config/claude/mcp.json`
+- Rule in `~/.config/claude/rules/context7.md`
+- Skill in `~/.config/claude/skills/context7/SKILL.md`
+
+#### `--cursor`
+
+Set up Context7 for Cursor.
+
+```bash
+ctx7 setup --cursor
+```
+
+Configures:
+- MCP server in `~/.cursor/mcp.json`
+- Rule in `~/.cursor/rules/context7.md`
+- Skill in `~/.cursor/skills/context7/SKILL.md`
+
+#### `--opencode`
+
+Set up Context7 for OpenCode.
+
+```bash
+ctx7 setup --opencode
+```
+
+Configures:
+- MCP server in `~/.config/opencode/mcp.json`
+- Rule in `~/.config/opencode/rules/context7.md`
+- Skill in `~/.config/opencode/skills/context7/SKILL.md`
+
+### Scope
+
+#### `-p, --project`
+
+Configure Context7 for the current project instead of globally.
+
+```bash
+ctx7 setup --project
+```
+
+When used, configuration files are created in the current directory:
+- `.claude/mcp.json` (for Claude Code)
+- `.cursor/mcp.json` (for Cursor)
+- `.config/opencode/mcp.json` (for OpenCode)
+
+<Note>
+Project-level configuration overrides global configuration for that specific project.
+</Note>
+
+### Authentication
+
+#### `--api-key <key>`
+
+Use API key authentication instead of OAuth.
+
+```bash
+ctx7 setup --api-key sk_your_api_key_here
+```
+
+This configures the MCP server with your API key for authentication.
+
+<Warning>
+Store API keys securely. Never commit them to version control.
+</Warning>
+
+#### `--oauth`
+
+Use OAuth endpoint where the IDE handles the authentication flow.
+
+```bash
+ctx7 setup --oauth
+```
+
+This is useful for IDEs that support OAuth authentication natively.
+
+### Other Options
+
+#### `-y, --yes`
+
+Skip confirmation prompts and use detected agents.
+
+```bash
+ctx7 setup -y
+```
+
+Useful for automation and scripts.
+
+## Interactive Mode
+
+When run without options, `ctx7 setup` enters interactive mode:
+
+```bash
+ctx7 setup
+```
+
+### Step 1: Agent Selection
+
+The CLI detects installed agents and prompts you to select which ones to configure:
+
+```
+? Which agents do you want to set up?
+ ❯◯ Claude Code
+  ◯ Cursor
+  ◉ OpenCode
+  ◯ Antigravity (already configured)
+```
+
+### Step 2: Authentication
+
+The CLI automatically authenticates you with Context7:
+
+1. Opens your browser to the login page
+2. You authenticate with Context7
+3. The CLI receives the authentication token
+4. Generates an API key for the MCP server
+
+```
+Opening browser to log in...
+
+If the browser didn't open, visit this URL:
+https://context7.com/oauth/authorize?...
+
+⠋ Waiting for login...
+✔ Login successful!
+✔ Authenticated
+```
+
+### Step 3: Configuration
+
+The CLI configures each selected agent:
+
+```
+✔ Context7 setup complete
+
+  Claude Code
+    + MCP server configured with API key
+      ~/.config/claude/mcp.json
+    + Rule installed
+      ~/.config/claude/rules/context7.md
+    + Skill installed
+      ~/.config/claude/skills/context7/SKILL.md
+
+  OpenCode
+    + MCP server configured with API key
+      ~/.config/opencode/mcp.json
+    + Rule installed
+      ~/.config/opencode/rules/context7.md
+    + Skill installed
+      ~/.config/opencode/skills/context7/SKILL.md
+```
+
+## What Gets Configured
+
+### MCP Server
+
+The MCP server entry is added to your agent's configuration file:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "sk_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Rule File
+
+A rule file is created that instructs your agent on how to use Context7:
+
+```markdown
+# Context7 Integration
+
+When working on tasks that involve external libraries, frameworks, or APIs:
+
+1. Use the Context7 MCP server to search for relevant documentation
+2. Query specific functions, classes, or patterns
+3. Retrieve code examples and best practices
+
+...
+```
+
+### Skill File
+
+A skill file is created that provides specialized instructions for using Context7:
+
+```markdown
+# Context7 Skill
+
+This skill teaches your agent how to effectively use Context7 for:
+- Finding accurate, up-to-date documentation
+- Retrieving code examples
+- Understanding API patterns
+
+...
+```
+
+## Examples
+
+### Global Setup for Claude Code
+
+```bash
+ctx7 setup --claude
+```
+
+Output:
+```
+Opening browser to log in...
+✔ Login successful!
+✔ Authenticated
+✔ Context7 setup complete
+
+  Claude Code
+    + MCP server configured with API key
+      ~/.config/claude/mcp.json
+    + Rule installed
+      ~/.config/claude/rules/context7.md
+    + Skill installed
+      ~/.config/claude/skills/context7/SKILL.md
+```
+
+### Project-Level Setup for Multiple Agents
+
+```bash
+ctx7 setup --cursor --opencode --project
+```
+
+Configures Context7 for both Cursor and OpenCode in the current project directory.
+
+### Setup with Custom API Key
+
+```bash
+ctx7 setup --claude --api-key sk_your_api_key_here
+```
+
+Skips the authentication flow and uses the provided API key directly.
+
+### Automated Setup
+
+```bash
+ctx7 setup -y
+```
+
+Automatically detects installed agents and configures them without prompts.
+
+## Troubleshooting
+
+### Already Configured
+
+If Context7 is already configured for an agent, it will be marked as such:
+
+```
+? Which agents do you want to set up?
+  ◯ Claude Code (already configured)
+  ◯ Cursor
+  ◯ OpenCode (already configured)
+```
+
+You can still select it to reconfigure or update the configuration.
+
+### Permission Errors
+
+If you encounter permission errors:
+
+```bash
+# For Claude Code
+sudo chown -R $(whoami) "~/.config/claude"
+
+# For Cursor
+sudo chown -R $(whoami) "~/.cursor"
+
+# For OpenCode
+sudo chown -R $(whoami) "~/.config/opencode"
+```
+
+### Authentication Failed
+
+If authentication fails:
+
+1. Check your internet connection
+2. Try again: `ctx7 setup`
+3. Use a custom API key: `ctx7 setup --api-key <key>`
+
+### MCP Server Not Working
+
+After setup, restart your AI coding agent to load the new MCP configuration.
+
+## Configuration Files
+
+### Global Configuration Paths
+
+| Agent | MCP Config | Rules | Skills |
+|-------|------------|-------|--------|
+| **Claude Code** | `~/.config/claude/mcp.json` | `~/.config/claude/rules/` | `~/.config/claude/skills/` |
+| **Cursor** | `~/.cursor/mcp.json` | `~/.cursor/rules/` | `~/.cursor/skills/` |
+| **OpenCode** | `~/.config/opencode/mcp.json` | `~/.config/opencode/rules/` | `~/.config/opencode/skills/` |
+| **Antigravity** | `~/.config/agent/mcp.json` | `~/.config/agent/rules/` | `~/.config/agent/skills/` |
+
+### Project Configuration Paths
+
+| Agent | MCP Config | Rules | Skills |
+|-------|------------|-------|--------|
+| **Claude Code** | `.claude/mcp.json` | `.claude/rules/` | `.claude/skills/` |
+| **Cursor** | `.cursor/mcp.json` | `.cursor/rules/` | `.cursor/skills/` |
+| **OpenCode** | `.config/opencode/mcp.json` | `.config/opencode/rules/` | `.config/opencode/skills/` |
+| **Antigravity** | `.agent/mcp.json` | `.agent/rules/` | `.agent/skills/` |
+
+## Next Steps
+
+After setup:
+
+1. Restart your AI coding agent
+2. Test the Context7 MCP server by asking your agent to search for documentation
+3. Install additional skills: `ctx7 skills search <topic>`
+
+## See Also
+
+- [CLI Overview](/cli/overview)
+- [Skills Commands](/cli/skills)
+- [Auth Commands](/cli/auth)

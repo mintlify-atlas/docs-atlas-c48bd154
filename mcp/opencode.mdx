@@ -1,0 +1,324 @@
+---
+title: 'Opencode Setup'
+description: 'Install and configure Context7 MCP Server in Opencode'
+---
+
+# Opencode Setup
+
+Install Context7 MCP Server in Opencode to access up-to-date documentation and code examples directly in your AI coding assistant.
+
+## Prerequisites
+
+- Opencode installed and configured
+- (Recommended) Free API key from [context7.com/dashboard](https://context7.com/dashboard)
+
+<Note>
+  While Context7 works without an API key, we recommend getting a free API key for higher rate limits.
+</Note>
+
+## Installation Methods
+
+Opencode supports both remote and local MCP server connections via its configuration file.
+
+<Tabs>
+  <Tab title="Remote Server (Recommended)">
+    Remote connection uses the hosted Context7 MCP server. No local installation required.
+
+    ### Configuration
+
+    Add the following to your Opencode configuration file:
+
+    <CodeGroup>
+      ```json With API Key (Recommended)
+      {
+        "mcp": {
+          "context7": {
+            "type": "remote",
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {
+              "CONTEXT7_API_KEY": "YOUR_API_KEY"
+            },
+            "enabled": true
+          }
+        }
+      }
+      ```
+
+      ```json Without API Key
+      {
+        "mcp": {
+          "context7": {
+            "type": "remote",
+            "url": "https://mcp.context7.com/mcp",
+            "enabled": true
+          }
+        }
+      }
+      ```
+
+      ```json With OAuth
+      {
+        "mcp": {
+          "context7": {
+            "type": "remote",
+            "url": "https://mcp.context7.com/mcp/oauth",
+            "enabled": true
+          }
+        }
+      }
+      ```
+    </CodeGroup>
+
+    <Note>
+      Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+    </Note>
+
+    ### Benefits
+
+    - No local installation or dependencies
+    - Always running the latest version
+    - Reduced system resource usage
+    - Perfect for teams (consistent configuration)
+  </Tab>
+
+  <Tab title="Local Server">
+    Local connection runs the MCP server on your machine using `npx`.
+
+    ### Configuration
+
+    Add the following to your Opencode configuration file:
+
+    <CodeGroup>
+      ```json With API Key (Recommended)
+      {
+        "mcp": {
+          "context7": {
+            "type": "local",
+            "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"],
+            "enabled": true
+          }
+        }
+      }
+      ```
+
+      ```json Without API Key
+      {
+        "mcp": {
+          "context7": {
+            "type": "local",
+            "command": ["npx", "-y", "@upstash/context7-mcp"],
+            "enabled": true
+          }
+        }
+      }
+      ```
+
+      ```json With Environment Variable
+      {
+        "mcp": {
+          "context7": {
+            "type": "local",
+            "command": ["npx", "-y", "@upstash/context7-mcp"],
+            "env": {
+              "CONTEXT7_API_KEY": "YOUR_API_KEY"
+            },
+            "enabled": true
+          }
+        }
+      }
+      ```
+    </CodeGroup>
+
+    <Note>
+      Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+    </Note>
+
+    ### Benefits
+
+    - Maximum privacy (runs entirely on your machine)
+    - Works offline after initial package download
+    - Full control over server lifecycle
+  </Tab>
+</Tabs>
+
+## Configuration File Location
+
+The Opencode configuration file location varies by platform:
+
+- **Linux**: `~/.config/opencode/config.json`
+- **macOS**: `~/Library/Application Support/opencode/config.json`
+- **Windows**: `%APPDATA%\opencode\config.json`
+
+Refer to the [Opencode MCP documentation](https://opencode.ai/docs/mcp-servers) for the exact path on your system.
+
+## Automated Setup
+
+Use the Context7 CLI for automated setup:
+
+```bash
+npx ctx7 setup --opencode
+```
+
+This command:
+- Authenticates via OAuth
+- Generates an API key
+- Configures the MCP server in your Opencode config
+- Sets up recommended rules
+
+## Verify Installation
+
+<Steps>
+  <Step title="Restart Opencode">
+    Close and reopen Opencode for the configuration changes to take effect.
+  </Step>
+
+  <Step title="Check MCP Status">
+    Look for Context7 in the MCP status indicator or settings panel.
+  </Step>
+
+  <Step title="Test with a Prompt">
+    Try a prompt like:
+    
+    ```txt
+    Create a Next.js middleware that checks for a valid JWT. use context7
+    ```
+
+    You should see Context7 tools being invoked and documentation being retrieved.
+  </Step>
+</Steps>
+
+## Add a Rule (Recommended)
+
+To avoid typing `use context7` in every prompt, configure Opencode to automatically invoke Context7 for code-related questions.
+
+Add the following to your Opencode rules configuration:
+
+```txt
+Always use Context7 MCP when I need library/API documentation, code generation, 
+setup or configuration steps without me having to explicitly ask.
+```
+
+See [Opencode Rules Documentation](https://opencode.ai/docs/rules) for details on configuring rules.
+
+## Advanced Configuration
+
+### Conditional Enablement
+
+Enable Context7 only for specific projects:
+
+```json
+{
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      },
+      "enabled": false  // Disabled by default
+    }
+  }
+}
+```
+
+Then enable it in project-specific configuration files.
+
+### Custom Timeout
+
+For slow network connections, increase the timeout:
+
+```json
+{
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      },
+      "enabled": true,
+      "timeout": 30000  // 30 seconds
+    }
+  }
+}
+```
+
+### Multiple Profiles
+
+Configure different Context7 instances for different use cases:
+
+```json
+{
+  "mcp": {
+    "context7-free": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "context7-pro": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_PRO_API_KEY"
+      },
+      "enabled": false
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="MCP server not appearing">
+    1. Verify JSON syntax in your configuration file
+    2. Check that `"enabled": true` is set
+    3. Restart Opencode completely
+    4. Check Opencode logs for error messages
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    1. Verify your API key is correct (should start with `ctx7sk`)
+    2. Ensure the API key is properly formatted in the configuration
+    3. Try regenerating your API key at [context7.com/dashboard](https://context7.com/dashboard)
+    4. Check that the header name is `CONTEXT7_API_KEY`
+  </Accordion>
+
+  <Accordion title="Local server fails to start">
+    1. Ensure Node.js is installed: `node --version`
+    2. Clear npx cache: `npx clear-npx-cache`
+    3. Test manual execution: `npx -y @upstash/context7-mcp`
+    4. Check that the command array is properly formatted
+  </Accordion>
+
+  <Accordion title="Remote connection fails">
+    1. Verify internet connectivity
+    2. Test the endpoint: `curl https://mcp.context7.com/ping`
+    3. Check firewall settings
+    4. Ensure proxy settings are configured if required
+  </Accordion>
+
+  <Accordion title="Rate limit errors">
+    1. Get a free API key at [context7.com/dashboard](https://context7.com/dashboard)
+    2. Check your usage on the dashboard
+    3. Consider upgrading to a paid plan at [context7.com/plans](https://context7.com/plans)
+  </Accordion>
+</AccordionGroup>
+
+## Learn More
+
+For more details on Opencode MCP integration:
+- [Opencode MCP Documentation](https://opencode.ai/docs/mcp-servers)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/mcp/configuration">
+    Learn about advanced configuration options
+  </Card>
+  
+  <Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+    Explore available MCP tools
+  </Card>
+</CardGroup>

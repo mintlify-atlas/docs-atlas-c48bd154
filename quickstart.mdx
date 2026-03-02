@@ -1,80 +1,248 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get Context7 MCP running in your AI coding assistant in under 5 minutes
 ---
 
-## Get started in three steps
-
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+This quickstart guide will get you up and running with Context7 MCP server in your preferred AI coding assistant.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **API Key Recommended**: Get a free API key at [context7.com/dashboard](https://context7.com/dashboard) for higher rate limits. Context7 works without an API key, but you'll have lower rate limits.
 </Note>
+
+## Automated Setup (Recommended)
+
+The fastest way to set up Context7 is using the `ctx7` CLI:
+
+<Steps>
+  <Step title="Run setup command">
+    ```bash
+    npx ctx7 setup
+    ```
+
+    This command will:
+    - Authenticate via OAuth
+    - Generate an API key automatically
+    - Configure the MCP server for your detected agents
+    - Add a rule to auto-invoke Context7
+  </Step>
+
+  <Step title="Select your AI coding assistant">
+    The CLI will detect installed agents (Cursor, Claude Code, OpenCode) and let you choose which to configure.
+
+    You can also target a specific agent:
+    ```bash
+    npx ctx7 setup --cursor
+    npx ctx7 setup --claude
+    npx ctx7 setup --opencode
+    ```
+  </Step>
+
+  <Step title="Start using Context7">
+    Restart your AI coding assistant and add `use context7` to your prompts:
+
+    ```txt
+    Create a Next.js middleware that checks for a valid JWT in cookies. use context7
+    ```
+
+    Or set up a rule to auto-invoke Context7 for all code-related questions.
+  </Step>
+</Steps>
+
+## Manual Setup
+
+If you prefer to configure manually, follow the instructions for your AI coding assistant.
+
+<Tip>
+  For project-specific configuration instead of global, use the `--project` flag:
+  ```bash
+  npx ctx7 setup --project
+  ```
+</Tip>
+
+<AccordionGroup>
+  <Accordion title="Cursor Setup" icon="cursor">
+    Go to: `Settings` → `Cursor Settings` → `MCP` → `Add new global MCP server`
+
+    Add this configuration to your `~/.cursor/mcp.json` file:
+
+    ### Remote Server (Recommended)
+
+    <CodeGroup>
+    ```json With API Key
+    {
+      "mcpServers": {
+        "context7": {
+          "url": "https://mcp.context7.com/mcp",
+          "headers": {
+            "CONTEXT7_API_KEY": "YOUR_API_KEY"
+          }
+        }
+      }
+    }
+    ```
+
+    ```json With OAuth
+    {
+      "mcpServers": {
+        "context7": {
+          "url": "https://mcp.context7.com/mcp/oauth"
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+
+    ### Local Server
+
+    ```json
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+        }
+      }
+    }
+    ```
+
+    <Note>
+      Since Cursor 1.0, you can also use the one-click install button in the README.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Claude Code Setup" icon="message-bot">
+    ### Remote Server (Recommended)
+
+    ```bash
+    claude mcp add --scope user --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+    ```
+
+    ### Local Server
+
+    ```bash
+    claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+    ```
+
+    <Tip>
+      Remove `--scope user` to install for the current project only.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="OpenCode Setup" icon="code">
+    Add this to your OpenCode configuration file:
+
+    ### Remote Server (Recommended)
+
+    ```json
+    "mcp": {
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp",
+        "headers": {
+          "CONTEXT7_API_KEY": "YOUR_API_KEY"
+        },
+        "enabled": true
+      }
+    }
+    ```
+
+    ### Local Server
+
+    ```json
+    {
+      "mcp": {
+        "context7": {
+          "type": "local",
+          "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"],
+          "enabled": true
+        }
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Add an Auto-Invoke Rule
+
+To avoid typing `use context7` in every prompt, add a rule to your AI coding assistant:
+
+**Cursor**: `Cursor Settings` → `Rules`
+
+**Claude Code**: Create or edit `CLAUDE.md` in your project
+
+**OpenCode**: Configuration rules section
+
+### Example Rule
+
+```txt
+Always use Context7 MCP when I need library/API documentation, code generation, 
+setup or configuration steps without me having to explicitly ask.
+```
+
+## Using Library IDs
+
+If you already know the exact library you want, specify its Context7 ID to skip the library-matching step:
+
+```txt
+Implement basic authentication with Supabase. use library /supabase/supabase for API and docs.
+```
+
+The slash syntax tells the MCP tool exactly which library to load docs for.
+
+## Specifying Versions
+
+To get documentation for a specific library version, mention it in your prompt:
+
+```txt
+How do I set up Next.js 14 middleware? use context7
+```
+
+Context7 will automatically match the appropriate version.
+
+## Verify Installation
+
+<Steps>
+  <Step title="Restart your AI coding assistant">
+    Close and reopen Cursor, Claude Code, or OpenCode to load the new MCP configuration.
+  </Step>
+
+  <Step title="Test with a simple prompt">
+    ```txt
+    Show me how to create a basic Express.js server. use context7
+    ```
+
+    You should see Context7 being invoked to fetch Express.js documentation.
+  </Step>
+
+  <Step title="Check MCP server logs">
+    Most AI coding assistants show MCP server status in their settings or debug panel. Look for Context7 in the list of active servers.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<Warning>
+  **Common Issues**:
+  - Make sure your API key starts with `ctx7sk`
+  - For local servers, ensure Node.js 18+ is installed
+  - Check that your AI coding assistant supports MCP (most recent versions do)
+  - Verify the configuration file path is correct for your OS
+</Warning>
+
+If Context7 isn't working:
+
+1. **Check API Key**: Get a fresh key from [context7.com/dashboard](https://context7.com/dashboard)
+2. **Check Configuration**: Ensure JSON syntax is valid (no trailing commas)
+3. **Check Logs**: Look for error messages in your AI assistant's MCP logs
+4. **Try Remote Server**: Remote servers are more reliable than local ones
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Learn about SDK, CLI, and AI SDK tools installation
+  </Card>
+  <Card title="API Reference" icon="book" href="https://context7.com/docs/api-guide">
+    Explore the REST API for custom integrations
+  </Card>
+</CardGroup>

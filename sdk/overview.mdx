@@ -1,0 +1,128 @@
+---
+title: SDK Overview
+description: JavaScript/TypeScript SDK for integrating Context7 documentation retrieval into your applications
+---
+
+The Context7 SDK (`@upstash/context7-sdk`) provides a simple, type-safe interface for searching libraries and retrieving relevant documentation snippets programmatically.
+
+## What is Context7?
+
+Context7 is a documentation retrieval service that helps you find and access relevant library documentation based on natural language queries. Instead of manually searching through docs, you can programmatically retrieve the exact information you need.
+
+## Key Features
+
+- **Type-safe API**: Full TypeScript support with detailed type definitions
+- **Dual response formats**: Get results as JSON objects or formatted text
+- **Smart search**: Query-based relevance ranking for better results
+- **Automatic retries**: Built-in retry logic with exponential backoff
+- **Zero dependencies**: Minimal footprint for production applications
+
+## Use Cases
+
+### AI-Powered Code Assistants
+
+Provide your AI with relevant documentation context:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({ apiKey: 'ctx7sk-...' });
+
+// Get documentation for React hooks
+const context = await client.getContext(
+  'How do I use useState hook?',
+  '/facebook/react',
+  { type: 'txt' }
+);
+
+// Feed context to your LLM
+const prompt = `${context}\n\nUser question: ${userQuery}`;
+```
+
+### Library Discovery
+
+Help users find the right libraries for their needs:
+
+```typescript
+const libraries = await client.searchLibrary(
+  'I need a web framework for Node.js',
+  'express'
+);
+
+libraries.forEach(lib => {
+  console.log(`${lib.name}: ${lib.description}`);
+  console.log(`Quality Score: ${lib.benchmarkScore}/100`);
+});
+```
+
+### Documentation Chatbots
+
+Build intelligent chatbots that answer framework-specific questions:
+
+```typescript
+async function answerQuestion(question: string, framework: string) {
+  // Find the library
+  const libraries = await client.searchLibrary(question, framework);
+  
+  if (libraries.length === 0) {
+    return 'Library not found';
+  }
+  
+  // Get relevant documentation
+  const docs = await client.getContext(question, libraries[0].id);
+  
+  return docs.map(doc => `**${doc.title}**\n${doc.content}`).join('\n\n');
+}
+```
+
+### IDE Extensions
+
+Create editor plugins that provide contextual documentation:
+
+```typescript
+// When user hovers over a function or imports a library
+const relevantDocs = await client.getContext(
+  'useEffect cleanup function',
+  '/facebook/react'
+);
+
+// Display in hover tooltip or sidebar
+```
+
+## Core Concepts
+
+### Library IDs
+
+Libraries are identified by a path-like ID format: `/owner/repository`
+
+Examples:
+- `/facebook/react`
+- `/vuejs/core`
+- `/expressjs/express`
+- `/microsoft/typescript`
+
+### Query-Based Ranking
+
+Both `searchLibrary` and `getContext` use your query to rank results by relevance. More specific queries yield more targeted documentation.
+
+### Response Formats
+
+- **JSON** (default): Structured data as TypeScript objects
+- **Text**: Pre-formatted strings ready for display or LLM consumption
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/installation">
+    Install the SDK with npm, yarn, or pnpm
+  </Card>
+  <Card title="Client Setup" icon="gear" href="/sdk/client">
+    Initialize and configure the Context7 client
+  </Card>
+  <Card title="Search Libraries" icon="magnifying-glass" href="/sdk/search-library">
+    Search for available libraries
+  </Card>
+  <Card title="Get Documentation" icon="book" href="/sdk/get-context">
+    Retrieve relevant documentation snippets
+  </Card>
+</CardGroup>

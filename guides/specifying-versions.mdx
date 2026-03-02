@@ -1,0 +1,348 @@
+---
+title: 'Specifying Versions'
+description: 'How to request specific library versions with Context7'
+---
+
+## Overview
+
+Context7 can retrieve documentation for specific versions of libraries. This ensures you get accurate, version-appropriate code examples and API references.
+
+## Why Specify Versions?
+
+Libraries change over time. An API that works in version 2 might not exist or work differently in version 3. Specifying versions helps you:
+
+- Get documentation matching your project's dependencies
+- Avoid breaking changes from newer versions
+- Understand migration paths between versions
+- Work with legacy codebases accurately
+
+<Warning>
+  Without version specification, Context7 typically returns documentation for the latest stable version.
+</Warning>
+
+## How to Specify Versions
+
+Simply mention the version number in your prompt. Context7's natural language processing automatically detects version references.
+
+### Basic Version Syntax
+
+<CodeGroup>
+
+```txt Major Version
+How do I set up Next.js 14 middleware? use context7
+```
+
+```txt Minor Version
+Show me authentication examples for Supabase 2.38. use context7
+```
+
+```txt Patch Version
+How do I use React 18.2.0 hooks? use context7
+```
+
+</CodeGroup>
+
+Context7 automatically matches the appropriate version documentation.
+
+### Natural Language Versions
+
+You can also use natural language to refer to versions:
+
+```txt
+How do I use server actions in the latest Next.js? use context7
+```
+
+```txt
+Show me authentication for Supabase v2. use context7
+```
+
+```txt
+What changed in React 18? use context7
+```
+
+## Version Format Examples
+
+Context7 recognizes various version formats:
+
+<AccordionGroup>
+  <Accordion title="Numeric versions" icon="hashtag">
+    ```txt
+    Next.js 14
+    React 18.2
+    Vue 3.4.21
+    ```
+  </Accordion>
+
+  <Accordion title="Prefixed with 'v'" icon="v">
+    ```txt
+    Next.js v14
+    Supabase v2.38
+    MongoDB v7.0
+    ```
+  </Accordion>
+
+  <Accordion title="In context" icon="message">
+    ```txt
+    How do I use middleware in Next.js version 14?
+    Show me hooks from React 18
+    ```
+  </Accordion>
+
+  <Accordion title="With library ID" icon="code">
+    ```txt
+    use library /vercel/next.js version 14
+    use library /facebook/react v18
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Combining Versions with Library IDs
+
+For maximum precision, combine version specification with library IDs:
+
+```txt
+Implement authentication with Supabase v2.38. 
+use library /supabase/supabase for API and docs.
+```
+
+This ensures:
+- Correct library (no ambiguity)
+- Correct version (exact match)
+- Faster response (skips library search)
+
+## Version Availability
+
+Not all versions may be available in Context7's index. Here's what to expect:
+
+<CardGroup cols={2}>
+  <Card title="Latest Versions" icon="check" color="green">
+    Current and recent major versions are typically well-covered.
+  </Card>
+  
+  <Card title="Older Versions" icon="clock" color="yellow">
+    Some older versions may have limited or no documentation.
+  </Card>
+  
+  <Card title="Beta/RC Versions" icon="flask" color="orange">
+    Pre-release versions may not be indexed.
+  </Card>
+  
+  <Card title="Deprecated Versions" icon="archive" color="gray">
+    Very old or deprecated versions might not be available.
+  </Card>
+</CardGroup>
+
+<Note>
+  If a specific version isn't available, Context7 will return the closest available version or the latest version.
+</Note>
+
+## Checking Your Project's Versions
+
+Before requesting documentation, check which versions your project uses:
+
+<Tabs>
+  <Tab title="Node.js/npm">
+    ```bash
+    # Check package.json
+    cat package.json | grep "next\|react\|vue"
+    
+    # Check installed version
+    npm list next
+    npm list react
+    ```
+  </Tab>
+  
+  <Tab title="Python/pip">
+    ```bash
+    # Check requirements.txt
+    cat requirements.txt
+    
+    # Check installed version
+    pip show django
+    pip show flask
+    ```
+  </Tab>
+  
+  <Tab title="Ruby/Bundler">
+    ```bash
+    # Check Gemfile
+    cat Gemfile
+    
+    # Check installed version
+    bundle show rails
+    ```
+  </Tab>
+</Tabs>
+
+## Practical Examples
+
+### Example 1: Next.js Middleware
+
+<Steps>
+  <Step title="Check your Next.js version">
+    ```bash
+    npm list next
+    # Output: next@14.1.0
+    ```
+  </Step>
+  
+  <Step title="Request version-specific docs">
+    ```txt
+    Create a Next.js 14 middleware that checks for authentication.
+    use context7
+    ```
+  </Step>
+  
+  <Step title="Get accurate results">
+    Context7 returns middleware examples specific to Next.js 14's App Router, not the older Pages Router.
+  </Step>
+</Steps>
+
+### Example 2: React Hooks Migration
+
+```txt
+What's the difference between React 17 and React 18 hooks? use context7
+```
+
+This helps you understand what changed between versions.
+
+### Example 3: Supabase Authentication
+
+```txt
+Show me how to set up email authentication with Supabase 2.x. 
+use library /supabase/supabase for API and docs.
+```
+
+Ensures you get v2 authentication patterns, not v1.
+
+## Version Ranges
+
+While Context7 doesn't support exact semver ranges, you can describe version ranges in natural language:
+
+```txt
+Show me features available in Next.js 13 and later. use context7
+```
+
+```txt
+What authentication methods work with Supabase v2 or higher? use context7
+```
+
+## SDK Usage with Versions
+
+When using the Context7 SDK, include version information in your query:
+
+```ts
+import { Context7 } from "@upstash/context7-sdk";
+
+const client = new Context7({
+  apiKey: process.env.CONTEXT7_API_KEY,
+});
+
+// Include version in the query
+const docs = await client.getContext(
+  "How do I use middleware in Next.js 14?",
+  "/vercel/next.js"
+);
+
+// Or be more explicit
+const docs = await client.getContext(
+  "middleware authentication patterns for version 14",
+  "/vercel/next.js"
+);
+```
+
+## Troubleshooting Version Requests
+
+<AccordionGroup>
+  <Accordion title="Getting docs for wrong version" icon="triangle-exclamation">
+    **Problem:** Requested Next.js 14 docs but got Next.js 13 examples.
+    
+    **Solutions:**
+    1. Be more explicit: "Next.js version 14" instead of "Next.js 14"
+    2. Mention version multiple times in your prompt
+    3. Use library ID with version: `use library /vercel/next.js v14`
+    4. Check if the specific version is indexed on [context7.com](https://context7.com)
+  </Accordion>
+
+  <Accordion title="Version not available" icon="ban">
+    **Problem:** The version you requested doesn't exist in Context7.
+    
+    **Solutions:**
+    1. Check if you have the version number correct
+    2. Try a nearby version (e.g., 14.0 instead of 14.1)
+    3. Use the latest version if your version is very old
+    4. [Submit the library version](/guides/adding-libraries) to Context7
+  </Accordion>
+
+  <Accordion title="Unclear which version was used" icon="question">
+    **Problem:** Not sure which version Context7 used in its response.
+    
+    **Solutions:**
+    1. Ask explicitly: "Which version of Next.js are these examples from?"
+    2. Check the documentation URLs in the response
+    3. Look for version-specific features in code examples
+  </Accordion>
+
+  <Accordion title="Mixed version documentation" icon="shuffle">
+    **Problem:** Getting examples from multiple versions mixed together.
+    
+    **Solutions:**
+    1. Use library ID to reduce ambiguity
+    2. Ask for specific version in each prompt
+    3. Add a rule that specifies your project's versions:
+       ```txt
+       This project uses Next.js 14 and React 18. Always fetch docs for these versions.
+       ```
+  </Accordion>
+</AccordionGroup>
+
+## Version-Specific Rules
+
+You can add version information to your project rules:
+
+```txt .cursorrules
+# Project Stack Versions
+- Next.js 14.1
+- React 18.2
+- Supabase 2.38
+- TypeScript 5.3
+
+When using Context7 MCP, always request documentation for these specific versions.
+```
+
+This ensures consistency across all Context7 invocations.
+
+## Best Practices
+
+<Steps>
+  <Step title="Know your versions">
+    Keep track of the library versions your project uses.
+  </Step>
+  
+  <Step title="Be specific">
+    Include version numbers in prompts when it matters:
+    - Migration questions
+    - Breaking change concerns
+    - Legacy codebase work
+  </Step>
+  
+  <Step title="Use latest for new projects">
+    For greenfield projects, you can usually omit version numbers to get the latest docs.
+  </Step>
+  
+  <Step title="Document in rules">
+    Add your project's versions to your rules file for consistency.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Best Practices" icon="star" href="/guides/best-practices">
+    Learn more ways to optimize your Context7 usage.
+  </Card>
+  
+  <Card title="Adding Libraries" icon="plus" href="/guides/adding-libraries">
+    Submit a library or version to Context7.
+  </Card>
+</CardGroup>

@@ -1,0 +1,371 @@
+---
+title: searchLibrary
+description: Search for libraries in Context7's database with query-based ranking
+---
+
+The `searchLibrary` method finds libraries matching your search query and library name, ranked by relevance to your specific use case.
+
+## Method Signature
+
+```typescript
+// Returns JSON array (default)
+await client.searchLibrary(
+  query: string,
+  libraryName: string,
+  options?: SearchLibraryOptions
+): Promise<Library[]>
+
+// Returns formatted text
+await client.searchLibrary(
+  query: string,
+  libraryName: string,
+  options: SearchLibraryOptions & { type: 'txt' }
+): Promise<string>
+```
+
+## Parameters
+
+<ParamField path="query" type="string" required>
+  The user's question or task description. This is used for relevance ranking to return the most appropriate library matches.
+  
+  Examples:
+  - `"I need to build a REST API"`
+  - `"Building a dashboard with charts"`
+  - `"State management for React app"`
+</ParamField>
+
+<ParamField path="libraryName" type="string" required>
+  The name of the library to search for. This doesn't need to be an exact match.
+  
+  Examples:
+  - `"react"`
+  - `"express"`
+  - `"typescript"`
+</ParamField>
+
+<ParamField path="options" type="SearchLibraryOptions" optional>
+  Configuration options for the search request
+  
+  <Expandable title="properties">
+    <ParamField path="type" type="'json' | 'txt'" default="'json'">
+      Response format:
+      - `"json"`: Returns `Library[]` array (default)
+      - `"txt"`: Returns formatted string
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Return Types
+
+### JSON Format (Default)
+
+Returns an array of `Library` objects:
+
+<ResponseField name="Library[]" type="array">
+  Array of matching libraries, ordered by relevance
+  
+  <Expandable title="Library object">
+    <ResponseField name="id" type="string" required>
+      Context7 library ID in format `/owner/repository`
+      
+      Example: `"/facebook/react"`
+    </ResponseField>
+    
+    <ResponseField name="name" type="string" required>
+      Display name of the library
+      
+      Example: `"React"`
+    </ResponseField>
+    
+    <ResponseField name="description" type="string" required>
+      Brief description of the library
+      
+      Example: `"A JavaScript library for building user interfaces"`
+    </ResponseField>
+    
+    <ResponseField name="totalSnippets" type="number" required>
+      Number of documentation snippets available for this library
+      
+      Example: `1250`
+    </ResponseField>
+    
+    <ResponseField name="trustScore" type="number" required>
+      Source reputation score from 0-10, indicating the reliability of the documentation source
+      
+      Example: `9.5`
+    </ResponseField>
+    
+    <ResponseField name="benchmarkScore" type="number" required>
+      Quality indicator score from 0-100, measuring documentation completeness and accuracy
+      
+      Example: `87`
+    </ResponseField>
+    
+    <ResponseField name="versions" type="string[]" optional>
+      Available versions or tags for the library
+      
+      Example: `["v18.2.0", "v18.1.0", "v17.0.2"]`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Text Format
+
+Returns a formatted string with library information ready for display or LLM consumption.
+
+## Examples
+
+### Basic Search (JSON)
+
+Search for React libraries and get structured data:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({ apiKey: 'ctx7sk-...' });
+
+const libraries = await client.searchLibrary(
+  'I want to build a user interface',
+  'react'
+);
+
+console.log(`Found ${libraries.length} libraries`);
+
+libraries.forEach(lib => {
+  console.log(`Name: ${lib.name}`);
+  console.log(`ID: ${lib.id}`);
+  console.log(`Description: ${lib.description}`);
+  console.log(`Snippets: ${lib.totalSnippets}`);
+  console.log(`Quality: ${lib.benchmarkScore}/100`);
+  console.log('---');
+});
+```
+
+### Explicit JSON Format
+
+```typescript
+const libraries = await client.searchLibrary(
+  'I need a web framework',
+  'express',
+  { type: 'json' }
+);
+
+// TypeScript knows this is Library[]
+const firstLibrary = libraries[0];
+console.log(firstLibrary.id); // e.g., "/expressjs/express"
+```
+
+### Text Format for LLMs
+
+Get pre-formatted text suitable for feeding to language models:
+
+```typescript
+const librariesText = await client.searchLibrary(
+  'I want to use TypeScript',
+  'typescript',
+  { type: 'txt' }
+);
+
+// Use in your LLM prompt
+const prompt = `
+Available libraries:
+${librariesText}
+
+Which library should I use for ${userQuestion}?
+`;
+```
+
+### Filtering by Quality
+
+Find high-quality libraries based on benchmark scores:
+
+```typescript
+const libraries = await client.searchLibrary(
+  'state management for React',
+  'redux'
+);
+
+const highQuality = libraries.filter(lib => lib.benchmarkScore > 80);
+
+console.log(`Found ${highQuality.length} high-quality libraries`);
+```
+
+### Library Discovery UI
+
+Build a library selection interface:
+
+```typescript
+async function findLibraries(userTask: string, searchTerm: string) {
+  const libraries = await client.searchLibrary(userTask, searchTerm);
+  
+  return libraries.map(lib => ({
+    value: lib.id,
+    label: lib.name,
+    description: lib.description,
+    badges: [
+      `${lib.totalSnippets} docs`,
+      `Quality: ${lib.benchmarkScore}/100`
+    ]
+  }));
+}
+
+// Usage in UI framework
+const options = await findLibraries(
+  'Build a REST API with Node.js',
+  'express'
+);
+```
+
+### Comparing Multiple Libraries
+
+```typescript
+const searchTerms = ['react', 'vue', 'svelte'];
+
+const results = await Promise.all(
+  searchTerms.map(term =>
+    client.searchLibrary('I want to build a web app', term)
+  )
+);
+
+// Compare the top result from each
+results.forEach((libs, index) => {
+  if (libs.length > 0) {
+    const top = libs[0];
+    console.log(`${searchTerms[index]}: ${top.benchmarkScore}/100`);
+  }
+});
+```
+
+### Error Handling
+
+```typescript
+import { Context7Error } from '@upstash/context7-sdk';
+
+try {
+  const libraries = await client.searchLibrary(
+    'Build a web app',
+    'react'
+  );
+  
+  if (libraries.length === 0) {
+    console.log('No libraries found');
+  }
+} catch (error) {
+  if (error instanceof Context7Error) {
+    console.error('Context7 error:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+### Empty Query Validation
+
+```typescript
+try {
+  // This will throw an error
+  const libraries = await client.searchLibrary('', '');
+} catch (error) {
+  if (error instanceof Context7Error) {
+    console.error('Invalid search parameters');
+  }
+}
+```
+
+## Type Definitions
+
+### SearchLibraryOptions
+
+```typescript
+interface SearchLibraryOptions {
+  /**
+   * Response format
+   * - "json": Returns Library[] array (default)
+   * - "txt": Returns formatted text string
+   */
+  type?: 'json' | 'txt';
+}
+```
+
+### Library
+
+```typescript
+interface Library {
+  /** Context7 library ID (e.g., "/facebook/react") */
+  id: string;
+  
+  /** Library display name */
+  name: string;
+  
+  /** Library description */
+  description: string;
+  
+  /** Number of documentation snippets available */
+  totalSnippets: number;
+  
+  /** Source reputation score (0-10) */
+  trustScore: number;
+  
+  /** Quality indicator score (0-100) */
+  benchmarkScore: number;
+  
+  /** Available versions/tags */
+  versions?: string[];
+}
+```
+
+## Best Practices
+
+### Write Descriptive Queries
+
+Better queries lead to more relevant results:
+
+```typescript
+// Less effective
+await client.searchLibrary('react', 'react');
+
+// More effective - provides context
+await client.searchLibrary(
+  'I need to build a dashboard with real-time updates',
+  'react'
+);
+```
+
+### Use Quality Scores
+
+Consider both trust and benchmark scores when selecting libraries:
+
+```typescript
+const libraries = await client.searchLibrary(query, searchTerm);
+
+const best = libraries.find(lib => 
+  lib.trustScore > 8 && lib.benchmarkScore > 75
+);
+```
+
+### Cache Results
+
+For repeated searches, consider caching results:
+
+```typescript
+const cache = new Map<string, Library[]>();
+
+async function cachedSearch(query: string, libraryName: string) {
+  const key = `${query}:${libraryName}`;
+  
+  if (cache.has(key)) {
+    return cache.get(key)!;
+  }
+  
+  const results = await client.searchLibrary(query, libraryName);
+  cache.set(key, results);
+  
+  return results;
+}
+```
+
+## Next Steps
+
+<Card title="Get Documentation Context" icon="book" href="/sdk/get-context">
+  Learn how to retrieve documentation snippets for a specific library
+</Card>

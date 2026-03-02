@@ -1,0 +1,433 @@
+---
+title: 'All MCP Clients'
+description: 'Installation instructions for 30+ MCP clients supporting Context7'
+---
+
+# All MCP Clients
+
+Context7 MCP Server is compatible with 30+ MCP clients. Below are installation instructions for popular clients.
+
+<Note>
+  For the most up-to-date list of supported clients and installation instructions, visit [context7.com/docs/resources/all-clients](https://context7.com/docs/resources/all-clients)
+</Note>
+
+## Quick Links
+
+<CardGroup cols={3}>
+  <Card title="Cursor" icon="arrow-pointer" href="/mcp/cursor">
+    Install in Cursor IDE
+  </Card>
+  
+  <Card title="Claude Code" icon="terminal" href="/mcp/claude-code">
+    Install in Claude Code
+  </Card>
+  
+  <Card title="Opencode" icon="code" href="/mcp/opencode">
+    Install in Opencode
+  </Card>
+</CardGroup>
+
+## Popular Clients
+
+### Cursor
+
+Cursor is one of the most popular AI-powered code editors.
+
+**Remote Server:**
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**Local Server:**
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+[Full Cursor Setup Guide →](/mcp/cursor)
+
+---
+
+### Claude Code
+
+Official AI coding assistant from Anthropic.
+
+**Local Server:**
+```bash
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+```
+
+**Remote Server:**
+```bash
+claude mcp add --scope user --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+```
+
+[Full Claude Code Setup Guide →](/mcp/claude-code)
+
+---
+
+### Opencode
+
+Open-source AI coding assistant.
+
+**Remote Server:**
+```json
+{
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      },
+      "enabled": true
+    }
+  }
+}
+```
+
+**Local Server:**
+```json
+{
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"],
+      "enabled": true
+    }
+  }
+}
+```
+
+[Full Opencode Setup Guide →](/mcp/opencode)
+
+---
+
+### Cline (VSCode Extension)
+
+AI coding assistant for Visual Studio Code.
+
+**Configuration Location:** VSCode Settings → MCP Settings
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Roo Code (VSCode Extension)
+
+Another popular VSCode AI assistant.
+
+**Configuration Location:** VSCode Settings → MCP Settings
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Continue.dev
+
+Open-source AI code assistant.
+
+**Configuration Location:** `~/.continue/config.json`
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Zed Editor
+
+High-performance collaborative code editor.
+
+**Configuration Location:** Zed Settings → MCP
+
+```json
+{
+  "context_servers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Windsurf
+
+AI-powered code editor.
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Claude Desktop
+
+Standalone Claude application with MCP support.
+
+**Configuration Location:** 
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+### Sourcegraph Cody
+
+AI coding assistant with deep codebase understanding.
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+---
+
+## Installation Patterns
+
+Most MCP clients follow one of these patterns:
+
+### Pattern 1: stdio (Local)
+
+Local execution using `npx` and standard input/output:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+### Pattern 2: HTTP (Remote)
+
+Remote connection via HTTPS:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+### Pattern 3: Environment Variables
+
+Using environment variables for API keys:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Automated Setup
+
+The Context7 CLI can automatically configure many popular clients:
+
+```bash
+# Auto-detect and configure
+npx ctx7 setup
+
+# Target specific client
+npx ctx7 setup --cursor
+npx ctx7 setup --claude
+npx ctx7 setup --opencode
+```
+
+## Authentication Options
+
+All clients support both authentication methods:
+
+<Tabs>
+  <Tab title="API Key">
+    Get a free API key at [context7.com/dashboard](https://context7.com/dashboard)
+
+    **Pass via command line:**
+    ```bash
+    --api-key YOUR_API_KEY
+    ```
+
+    **Pass via environment variable:**
+    ```bash
+    export CONTEXT7_API_KEY="YOUR_API_KEY"
+    ```
+
+    **Pass via header (remote only):**
+    ```json
+    "headers": {
+      "CONTEXT7_API_KEY": "YOUR_API_KEY"
+    }
+    ```
+  </Tab>
+
+  <Tab title="OAuth 2.0">
+    OAuth is available for remote HTTP connections.
+
+    Change the endpoint from `/mcp` to `/mcp/oauth`:
+
+    ```json
+    {
+      "url": "https://mcp.context7.com/mcp/oauth"
+    }
+    ```
+
+    The client will handle the OAuth flow automatically if it supports the [MCP OAuth specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization).
+  </Tab>
+</Tabs>
+
+## Testing Installation
+
+After installation, test Context7 with this prompt:
+
+```txt
+Create a Next.js middleware that checks for a valid JWT in cookies. use context7
+```
+
+You should see:
+1. Context7 tools being invoked
+2. Library resolution (e.g., finding Next.js)
+3. Documentation retrieval
+4. Generated code with up-to-date APIs
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Server not appearing in client">
+    1. Check JSON syntax in configuration file
+    2. Verify configuration file location is correct
+    3. Restart the client application
+    4. Check client logs for error messages
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    1. Verify API key format (should start with `ctx7sk`)
+    2. Regenerate API key at [context7.com/dashboard](https://context7.com/dashboard)
+    3. Check header/environment variable names match
+  </Accordion>
+
+  <Accordion title="Connection errors">
+    **For local (stdio):**
+    - Ensure Node.js is installed
+    - Clear npx cache: `npx clear-npx-cache`
+    - Test manually: `npx -y @upstash/context7-mcp`
+
+    **For remote (HTTP):**
+    - Check internet connectivity
+    - Test endpoint: `curl https://mcp.context7.com/ping`
+    - Verify firewall settings
+  </Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Configuration Guide" icon="gear" href="/mcp/configuration">
+    Advanced configuration options
+  </Card>
+  
+  <Card title="Troubleshooting" icon="wrench" href="/docs/resources/troubleshooting">
+    Common issues and solutions
+  </Card>
+  
+  <Card title="MCP Specification" icon="book" href="https://modelcontextprotocol.io">
+    Learn about the MCP protocol
+  </Card>
+  
+  <Card title="Discord Community" icon="discord" href="https://upstash.com/discord">
+    Get help from the community
+  </Card>
+</CardGroup>
+
+## Can't Find Your Client?
+
+If your MCP client isn't listed here:
+
+1. Check the client's MCP documentation
+2. Try the standard stdio or HTTP configuration patterns
+3. Visit [context7.com/docs/resources/all-clients](https://context7.com/docs/resources/all-clients) for the complete list
+4. Ask in our [Discord community](https://upstash.com/discord)
+
+Most MCP clients follow similar configuration patterns, so you can usually adapt one of the examples above.

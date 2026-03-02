@@ -1,0 +1,533 @@
+---
+title: getContext
+description: Retrieve relevant documentation snippets for a library based on your query
+---
+
+The `getContext` method retrieves documentation snippets from a specific library, ranked by relevance to your query. This is the core method for getting contextual documentation to feed to LLMs or display to users.
+
+## Method Signature
+
+```typescript
+// Returns JSON array (default)
+await client.getContext(
+  query: string,
+  libraryId: string,
+  options?: GetContextOptions
+): Promise<Documentation[]>
+
+// Returns formatted text
+await client.getContext(
+  query: string,
+  libraryId: string,
+  options: GetContextOptions & { type: 'txt' }
+): Promise<string>
+```
+
+## Parameters
+
+<ParamField path="query" type="string" required>
+  The user's question or task. Used to rank documentation snippets by relevance.
+  
+  Examples:
+  - `"How do I use the useState hook?"`
+  - `"How to handle form validation?"`
+  - `"Setting up middleware in Express"`
+</ParamField>
+
+<ParamField path="libraryId" type="string" required>
+  Context7 library ID in the format `/owner/repository`.
+  
+  Examples:
+  - `"/facebook/react"`
+  - `"/vuejs/core"`
+  - `"/expressjs/express"`
+  - `"/microsoft/typescript"`
+  
+  <Tip>
+  Get library IDs from the `searchLibrary` method's results.
+  </Tip>
+</ParamField>
+
+<ParamField path="options" type="GetContextOptions" optional>
+  Configuration options for the request
+  
+  <Expandable title="properties">
+    <ParamField path="type" type="'json' | 'txt'" default="'json'">
+      Response format:
+      - `"json"`: Returns `Documentation[]` array (default)
+      - `"txt"`: Returns formatted string ready for LLM consumption
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Return Types
+
+### JSON Format (Default)
+
+Returns an array of `Documentation` objects:
+
+<ResponseField name="Documentation[]" type="array">
+  Array of documentation snippets, ordered by relevance to the query
+  
+  <Expandable title="Documentation object">
+    <ResponseField name="title" type="string" required>
+      Title or heading of the documentation snippet
+      
+      Example: `"Using the useState Hook"`
+    </ResponseField>
+    
+    <ResponseField name="content" type="string" required>
+      The documentation content. May include markdown-formatted code blocks.
+      
+      Example: `"The useState Hook lets you add state to function components..."`
+    </ResponseField>
+    
+    <ResponseField name="source" type="string" required>
+      Source URL or identifier for the documentation snippet
+      
+      Example: `"https://react.dev/reference/react/useState"`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Text Format
+
+Returns a pre-formatted string with all documentation snippets, ready to be inserted into an LLM prompt or displayed to users.
+
+## Examples
+
+### Basic Usage (JSON)
+
+Get structured documentation for a specific query:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({ apiKey: 'ctx7sk-...' });
+
+const docs = await client.getContext(
+  'How do I use React hooks?',
+  '/facebook/react'
+);
+
+console.log(`Found ${docs.length} relevant documentation snippets`);
+
+docs.forEach(doc => {
+  console.log(`\nTitle: ${doc.title}`);
+  console.log(`Content: ${doc.content}`);
+  console.log(`Source: ${doc.source}`);
+});
+```
+
+### Explicit JSON Format
+
+```typescript
+const docs = await client.getContext(
+  'How to create components in Vue?',
+  '/vuejs/core',
+  { type: 'json' }
+);
+
+// TypeScript knows this is Documentation[]
+const firstDoc = docs[0];
+console.log(firstDoc.title);
+console.log(firstDoc.content);
+```
+
+### Text Format for LLMs
+
+Get pre-formatted documentation for language model prompts:
+
+```typescript
+const context = await client.getContext(
+  'How do I handle errors in Express middleware?',
+  '/expressjs/express',
+  { type: 'txt' }
+);
+
+// Use directly in your LLM prompt
+const prompt = `
+Relevant documentation:
+${context}
+
+Based on the documentation above, answer this question:
+${userQuestion}
+`;
+
+// Send to your LLM
+const response = await openai.chat.completions.create({
+  model: 'gpt-4',
+  messages: [
+    { role: 'system', content: prompt },
+    { role: 'user', content: userQuestion }
+  ]
+});
+```
+
+### Building a Documentation Chatbot
+
+```typescript
+async function answerQuestion(question: string, framework: string) {
+  // First, find the library
+  const libraries = await client.searchLibrary(question, framework);
+  
+  if (libraries.length === 0) {
+    return { error: 'Library not found' };
+  }
+  
+  // Get relevant documentation
+  const docs = await client.getContext(question, libraries[0].id);
+  
+  if (docs.length === 0) {
+    return { error: 'No relevant documentation found' };
+  }
+  
+  // Format response
+  return {
+    answer: docs.map(doc => ({
+      title: doc.title,
+      content: doc.content,
+      source: doc.source
+    })),
+    library: libraries[0].name
+  };
+}
+
+// Usage
+const result = await answerQuestion(
+  'How do I use computed properties?',
+  'vue'
+);
+```
+
+### RAG (Retrieval-Augmented Generation) Pattern
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+import OpenAI from 'openai';
+
+const context7 = new Context7({ apiKey: process.env.CONTEXT7_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function ragAnswer(question: string, libraryId: string) {
+  // Retrieve relevant documentation
+  const context = await context7.getContext(question, libraryId, {
+    type: 'txt'
+  });
+  
+  // Generate answer using the context
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4-turbo',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a helpful assistant. Use the following documentation to answer questions accurately.\n\n${context}`
+      },
+      {
+        role: 'user',
+        content: question
+      }
+    ]
+  });
+  
+  return completion.choices[0].message.content;
+}
+
+// Usage
+const answer = await ragAnswer(
+  'How do I optimize React performance?',
+  '/facebook/react'
+);
+```
+
+### Displaying Documentation in UI
+
+```typescript
+async function fetchDocs(topic: string, libraryId: string) {
+  const docs = await client.getContext(topic, libraryId);
+  
+  return docs.map(doc => ({
+    id: crypto.randomUUID(),
+    title: doc.title,
+    content: doc.content,
+    sourceUrl: doc.source,
+    // Parse markdown content for rendering
+    html: markdownToHtml(doc.content)
+  }));
+}
+
+// In your React component
+function DocsPanel({ topic, libraryId }) {
+  const [docs, setDocs] = useState([]);
+  
+  useEffect(() => {
+    fetchDocs(topic, libraryId).then(setDocs);
+  }, [topic, libraryId]);
+  
+  return (
+    <div>
+      {docs.map(doc => (
+        <article key={doc.id}>
+          <h3>{doc.title}</h3>
+          <div dangerouslySetInnerHTML={{ __html: doc.html }} />
+          <a href={doc.sourceUrl}>View source</a>
+        </article>
+      ))}
+    </div>
+  );
+}
+```
+
+### Combining Search and Context
+
+```typescript
+async function smartSearch(userQuery: string, searchTerm: string) {
+  // Find relevant libraries
+  const libraries = await client.searchLibrary(userQuery, searchTerm);
+  
+  if (libraries.length === 0) {
+    return { error: 'No libraries found' };
+  }
+  
+  // Get documentation from the most relevant library
+  const topLibrary = libraries[0];
+  const docs = await client.getContext(userQuery, topLibrary.id);
+  
+  return {
+    library: topLibrary,
+    documentation: docs,
+    alternatives: libraries.slice(1, 4) // Next 3 alternatives
+  };
+}
+
+// Usage
+const result = await smartSearch(
+  'I need to validate form inputs',
+  'react'
+);
+
+console.log(`Using: ${result.library.name}`);
+console.log(`Found ${result.documentation.length} relevant docs`);
+```
+
+### Error Handling
+
+```typescript
+import { Context7Error } from '@upstash/context7-sdk';
+
+try {
+  const docs = await client.getContext(
+    'How to use components?',
+    '/facebook/react'
+  );
+  
+  if (docs.length === 0) {
+    console.log('No relevant documentation found for this query');
+  }
+} catch (error) {
+  if (error instanceof Context7Error) {
+    console.error('Context7 error:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+### Handling Invalid Library IDs
+
+```typescript
+try {
+  const docs = await client.getContext(
+    'How to use this?',
+    '/nonexistent/library'
+  );
+} catch (error) {
+  if (error instanceof Context7Error) {
+    console.error('Library not found or access denied');
+  }
+}
+```
+
+### Caching Documentation
+
+```typescript
+class CachedContext7 {
+  private cache = new Map<string, Documentation[]>();
+  private client: Context7;
+  
+  constructor(apiKey: string) {
+    this.client = new Context7({ apiKey });
+  }
+  
+  async getContext(query: string, libraryId: string): Promise<Documentation[]> {
+    const key = `${libraryId}:${query}`;
+    
+    if (this.cache.has(key)) {
+      return this.cache.get(key)!;
+    }
+    
+    const docs = await this.client.getContext(query, libraryId);
+    this.cache.set(key, docs);
+    
+    // Auto-expire after 1 hour
+    setTimeout(() => this.cache.delete(key), 60 * 60 * 1000);
+    
+    return docs;
+  }
+}
+```
+
+### Server-Side API Route (Next.js)
+
+```typescript
+// app/api/docs/route.ts
+import { Context7 } from '@upstash/context7-sdk';
+import { NextResponse } from 'next/server';
+
+const client = new Context7({ apiKey: process.env.CONTEXT7_API_KEY });
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get('query');
+  const libraryId = searchParams.get('libraryId');
+  
+  if (!query || !libraryId) {
+    return NextResponse.json(
+      { error: 'Missing query or libraryId' },
+      { status: 400 }
+    );
+  }
+  
+  try {
+    const docs = await client.getContext(query, libraryId);
+    return NextResponse.json({ docs });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch documentation' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## Type Definitions
+
+### GetContextOptions
+
+```typescript
+interface GetContextOptions {
+  /**
+   * Response format
+   * - "json": Returns Documentation[] array (default)
+   * - "txt": Returns formatted text string
+   */
+  type?: 'json' | 'txt';
+}
+```
+
+### Documentation
+
+```typescript
+interface Documentation {
+  /** Title of the documentation snippet */
+  title: string;
+  
+  /** The documentation content (may include code blocks in markdown format) */
+  content: string;
+  
+  /** Source URL or identifier for the snippet */
+  source: string;
+}
+```
+
+## Best Practices
+
+### Write Specific Queries
+
+More specific queries return more targeted documentation:
+
+```typescript
+// Less effective - too vague
+await client.getContext('React', '/facebook/react');
+
+// More effective - specific question
+await client.getContext(
+  'How do I use useEffect for data fetching?',
+  '/facebook/react'
+);
+```
+
+### Choose the Right Format
+
+Use JSON when you need to process or display documentation:
+
+```typescript
+const docs = await client.getContext(query, libraryId); // JSON by default
+
+// Process each snippet individually
+const titles = docs.map(doc => doc.title);
+```
+
+Use text format when feeding directly to LLMs:
+
+```typescript
+const context = await client.getContext(query, libraryId, { type: 'txt' });
+
+// Ready for LLM prompt
+const prompt = `Context: ${context}\n\nQuestion: ${question}`;
+```
+
+### Handle Empty Results
+
+```typescript
+const docs = await client.getContext(query, libraryId);
+
+if (docs.length === 0) {
+  // Try a broader query or different library
+  const alternativeDocs = await client.getContext(
+    'general introduction',
+    libraryId
+  );
+}
+```
+
+### Process Markdown Content
+
+Documentation content may include markdown. Process it for display:
+
+```typescript
+import { marked } from 'marked';
+
+const docs = await client.getContext(query, libraryId);
+
+const processedDocs = docs.map(doc => ({
+  ...doc,
+  html: marked(doc.content)
+}));
+```
+
+## Common Library IDs
+
+Here are some frequently used library IDs:
+
+- React: `/facebook/react`
+- Vue: `/vuejs/core`
+- Express: `/expressjs/express`
+- TypeScript: `/microsoft/typescript`
+- Next.js: `/vercel/next.js`
+- Svelte: `/sveltejs/svelte`
+
+<Tip>
+Use the `searchLibrary` method to discover library IDs programmatically.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Search Libraries" icon="magnifying-glass" href="/sdk/search-library">
+    Learn how to find library IDs using searchLibrary
+  </Card>
+  <Card title="Client Configuration" icon="gear" href="/sdk/client">
+    Advanced client configuration options
+  </Card>
+</CardGroup>

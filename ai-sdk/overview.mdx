@@ -1,0 +1,106 @@
+---
+title: 'AI SDK Integration Overview'
+description: 'Add Context7 documentation lookup to your Vercel AI SDK workflows with tools and agents'
+---
+
+## Introduction
+
+`@upstash/context7-tools-ai-sdk` provides [Vercel AI SDK](https://ai-sdk.dev/) compatible tools and agents that give your AI applications access to up-to-date library documentation through Context7.
+
+This package enables you to:
+
+- Add documentation lookup tools to your AI SDK workflows with `generateText` or `streamText`
+- Create documentation-aware agents using the pre-configured `Context7Agent`
+- Build RAG pipelines that retrieve accurate, version-specific code examples
+
+## Installation
+
+```bash
+npm install @upstash/context7-tools-ai-sdk @upstash/context7-sdk ai zod
+```
+
+## Quick Start
+
+### Using Tools with generateText
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'How do I use React Server Components?',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+
+console.log(text);
+```
+
+### Using the Context7 Agent
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+});
+
+const { text } = await agent.generate({
+  prompt: 'How do I set up routing in Next.js?',
+});
+
+console.log(text);
+```
+
+## Authentication
+
+Set your Context7 API key via environment variable:
+
+```bash
+export CONTEXT7_API_KEY=ctx7sk-...
+```
+
+Alternatively, pass the API key directly to tools or agents:
+
+```typescript
+const tool = resolveLibraryId({ apiKey: 'ctx7sk-...' });
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  apiKey: 'ctx7sk-...',
+});
+```
+
+## Package Contents
+
+The package provides:
+
+### Tools
+- **`resolveLibraryId`** - Searches Context7's database to find the correct library ID
+- **`queryDocs`** - Fetches documentation for a specific library
+
+### Agents
+- **`Context7Agent`** - Pre-configured agent that handles multi-step documentation lookup
+
+### Prompts
+- **`SYSTEM_PROMPT`** - Basic documentation assistant prompt
+- **`AGENT_PROMPT`** - Detailed multi-step workflow prompt
+- **`RESOLVE_LIBRARY_ID_DESCRIPTION`** - Tool description for resolveLibraryId
+- **`QUERY_DOCS_DESCRIPTION`** - Tool description for queryDocs
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/ai-sdk/tools">
+    Learn about resolveLibraryId and queryDocs tools
+  </Card>
+  <Card title="Agent" icon="robot" href="/ai-sdk/agent">
+    Use the pre-configured Context7Agent
+  </Card>
+</CardGroup>

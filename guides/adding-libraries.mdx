@@ -1,0 +1,374 @@
+---
+title: 'Adding Libraries'
+description: 'Submit libraries to the Context7 registry'
+---
+
+## Overview
+
+Context7 maintains a growing registry of library documentation. If your favorite library isn't available, you can submit it to be indexed and made available to the entire Context7 community.
+
+<Info>
+  All submitted libraries go through a review process to ensure quality and security.
+</Info>
+
+## Who Can Submit Libraries?
+
+Anyone can submit a library to Context7:
+
+- Library maintainers
+- Contributors
+- Users who want documentation for a library
+- Organizations managing internal libraries
+
+## Submission Process
+
+<Steps>
+  <Step title="Check if the library exists">
+    Before submitting, verify the library isn't already in Context7:
+    
+    1. Search on [context7.com](https://context7.com)
+    2. Try using it in your AI assistant with Context7
+    3. Use the SDK to search:
+       ```ts
+       const libraries = await client.searchLibrary(
+         "general query",
+         "library-name"
+       );
+       ```
+  </Step>
+  
+  <Step title="Visit the submission page">
+    Go to [context7.com/docs/adding-libraries](https://context7.com/docs/adding-libraries) for the official submission form and detailed instructions.
+  </Step>
+  
+  <Step title="Provide required information">
+    You'll need to provide:
+    - Library name
+    - Repository URL (GitHub, GitLab, etc.)
+    - Documentation URL (if different from repository)
+    - Brief description
+    - Primary language/framework
+  </Step>
+  
+  <Step title="Wait for review">
+    The Context7 team will review your submission. This typically takes 1-3 business days.
+  </Step>
+  
+  <Step title="Get notified">
+    You'll receive an email when your library is indexed and available.
+  </Step>
+</Steps>
+
+## Submission Requirements
+
+For a library to be accepted into Context7, it should meet these criteria:
+
+### Documentation Quality
+
+<AccordionGroup>
+  <Accordion title="Has public documentation" icon="book">
+    The library must have publicly accessible documentation. This can be:
+    - README files
+    - Dedicated documentation site
+    - Wiki pages
+    - API reference docs
+    - Code comments (JSDoc, etc.)
+  </Accordion>
+
+  <Accordion title="Active maintenance" icon="wrench">
+    The library should be actively maintained:
+    - Recent commits (within last 6-12 months)
+    - Responsive to issues
+    - Regular releases
+    
+    <Note>
+      Exceptions may be made for stable, widely-used libraries with slower release cycles.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Clear licensing" icon="scale-balanced">
+    The library must have a clear open-source license or be commercially available with public documentation.
+  </Accordion>
+
+  <Accordion title="No malicious code" icon="shield-check">
+    Libraries are scanned for security issues before indexing.
+  </Accordion>
+</AccordionGroup>
+
+### What Gets Indexed
+
+Context7's crawlers index:
+
+- README and markdown documentation files
+- Documentation websites
+- API reference pages  
+- Code examples
+- Tutorial content
+- Migration guides
+- Changelog information
+
+<Warning>
+  Private or internal documentation cannot be indexed. Only publicly accessible content is crawled.
+</Warning>
+
+## Library ID Format
+
+Once indexed, your library will have an ID following this format:
+
+```txt
+/owner/repository
+```
+
+**Examples:**
+- `/facebook/react`
+- `/vercel/next.js`
+- `/supabase/supabase`
+- `/mongodb/docs`
+
+This ID is used in prompts and SDK calls:
+
+```txt
+use library /owner/repository for API and docs
+```
+
+## Submitting Specific Versions
+
+By default, Context7 indexes the latest version and recent major versions. If you need a specific version indexed:
+
+1. Mention it in your submission notes
+2. Provide a link to that version's documentation
+3. Explain why that version is important (e.g., widely used legacy version)
+
+## Private or Internal Libraries
+
+Context7 currently focuses on public, open-source libraries. For private or internal documentation:
+
+<CardGroup cols={2}>
+  <Card title="Use the SDK" icon="code">
+    Build your own integration using the Context7 SDK for internal tools.
+  </Card>
+  
+  <Card title="Self-hosted option" icon="server">
+    Contact Context7 about enterprise self-hosted options for private documentation.
+  </Card>
+</CardGroup>
+
+## After Submission
+
+### Review Process
+
+Your submission goes through several checks:
+
+1. **Automated checks**: URL validation, documentation accessibility
+2. **Security scan**: Malware and security issue detection  
+3. **Quality review**: Documentation completeness and clarity
+4. **Indexing**: Crawling and processing documentation
+5. **Testing**: Verification that the library works with Context7
+
+### Approval Timeline
+
+<Steps>
+  <Step title="Automated checks (minutes)">
+    Initial validation of URLs and accessibility.
+  </Step>
+  
+  <Step title="Security scan (hours)">
+    Automated security scanning.
+  </Step>
+  
+  <Step title="Manual review (1-3 days)">
+    Team review for quality and completeness.
+  </Step>
+  
+  <Step title="Indexing (varies)">
+    Time depends on documentation size. Small libraries may be indexed in hours, large ones may take a day or two.
+  </Step>
+</Steps>
+
+### Rejection Reasons
+
+Common reasons for rejection:
+
+<AccordionGroup>
+  <Accordion title="Insufficient documentation" icon="file-slash">
+    The library has minimal or no documentation beyond a basic README.
+    
+    **Solution:** Improve documentation before resubmitting.
+  </Accordion>
+
+  <Accordion title="Inactive project" icon="clock-slash">
+    No activity for 2+ years with no indication it's feature-complete.
+    
+    **Solution:** Fork and maintain the project, or find an active alternative.
+  </Accordion>
+
+  <Accordion title="Documentation not accessible" icon="lock">
+    Documentation requires authentication or is behind a paywall.
+    
+    **Solution:** Make documentation publicly accessible.
+  </Accordion>
+
+  <Accordion title="Security concerns" icon="triangle-exclamation">
+    Security scan found issues.
+    
+    **Solution:** Address security concerns and resubmit.
+  </Accordion>
+
+  <Accordion title="Duplicate submission" icon="copy">
+    The library already exists in Context7.
+    
+    **Solution:** Use the existing library ID.
+  </Accordion>
+</AccordionGroup>
+
+## Updating Indexed Libraries
+
+Context7 automatically crawls and updates indexed libraries on a regular schedule. However, if you need an immediate update:
+
+1. Visit [context7.com/docs/adding-libraries](https://context7.com/docs/adding-libraries)
+2. Submit an update request with the library ID
+3. Mention what changed (new version, major documentation update, etc.)
+
+<Tip>
+  Major version releases are usually re-crawled automatically within 24-48 hours.
+</Tip>
+
+## Reporting Issues
+
+If you find problems with indexed documentation:
+
+1. **Outdated content**: Request a re-crawl
+2. **Missing pages**: Report via the issue button on [context7.com](https://context7.com)
+3. **Incorrect information**: Use the "Report" button on the library's Context7 page
+4. **Suspicious content**: Report immediately via the "Report" button
+
+<Warning>
+  Context7 projects are community-contributed. If you encounter suspicious, inappropriate, or potentially harmful content, please report it immediately.
+</Warning>
+
+## Best Practices for Library Maintainers
+
+If you're submitting your own library, optimize for Context7 indexing:
+
+### Documentation Structure
+
+```txt
+ docs/
+ ├── README.md (overview, quick start)
+ ├── getting-started.md
+ ├── api-reference.md
+ ├── guides/
+ │   ├── authentication.md
+ │   ├── deployment.md
+ │   └── best-practices.md
+ └── examples/
+     ├── basic-usage.md
+     └── advanced-patterns.md
+```
+
+### Include Code Examples
+
+Ensure your documentation includes practical code examples:
+
+````markdown
+## Authentication
+
+Here's how to authenticate users:
+
+```typescript
+import { createClient } from 'your-library';
+
+const client = createClient({
+  apiKey: process.env.API_KEY
+});
+
+await client.auth.signIn({
+  email: 'user@example.com',
+  password: 'secure-password'
+});
+```
+````
+
+### Version Documentation
+
+Maintain documentation for major versions:
+
+```txt
+docs/
+├── v3/ (latest)
+│   └── ...
+├── v2/ (legacy, still supported)
+│   └── ...
+└── v1/ (deprecated, for reference)
+    └── ...
+```
+
+### Use Clear Headings
+
+Structure documentation with clear, searchable headings:
+
+```markdown
+# Library Name
+
+## Installation
+## Quick Start  
+## Core Concepts
+## API Reference
+## Examples
+## Troubleshooting
+```
+
+This helps Context7's AI better understand and retrieve relevant sections.
+
+## Community Contributions
+
+Context7 relies on community contributions:
+
+- **Submit libraries** you use and want others to benefit from
+- **Report issues** with existing libraries  
+- **Suggest improvements** to the indexing process
+- **Share feedback** on documentation quality
+
+<Card title="Join the discussion" icon="discord" href="https://upstash.com/discord">
+  Connect with the Context7 community on Discord.
+</Card>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="How long does indexing take?">
+    Initial indexing typically completes within 24 hours after approval. Large documentation sites may take longer.
+  </Accordion>
+
+  <Accordion title="Can I submit a library I don't maintain?">
+    Yes! Anyone can submit any public library. You don't need to be the maintainer.
+  </Accordion>
+
+  <Accordion title="What if my library is rejected?">
+    You'll receive feedback on why it was rejected and what you can do to address the issues. You can resubmit after making improvements.
+  </Accordion>
+
+  <Accordion title="How often is documentation updated?">
+    Context7 automatically re-crawls popular libraries weekly. Others are crawled monthly or when update requests are submitted.
+  </Accordion>
+
+  <Accordion title="Can I remove my library from Context7?">
+    Yes. If you're the library maintainer, contact Context7 support to request removal.
+  </Accordion>
+
+  <Accordion title="Is there a limit to submissions?">
+    No hard limit, but mass submissions may be rate-limited. Submit libraries genuinely useful to the community.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Submit a library" icon="plus" href="https://context7.com/docs/adding-libraries">
+    Ready to submit? Visit the official submission page.
+  </Card>
+  
+  <Card title="Browse libraries" icon="books" href="https://context7.com">
+    Explore what's already available in Context7.
+  </Card>
+</CardGroup>

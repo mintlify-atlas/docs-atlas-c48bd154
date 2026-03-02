@@ -1,0 +1,220 @@
+---
+title: Context7 Client
+description: Initialize and configure the Context7 client for your application
+---
+
+## Constructor
+
+Create a new Context7 client instance:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7(config);
+```
+
+### Parameters
+
+<ParamField path="config" type="Context7Config" default="{}">
+  Configuration object for the client
+  
+  <Expandable title="properties">
+    <ParamField path="apiKey" type="string" optional>
+      Your Context7 API key. If not provided, the client will look for the `CONTEXT7_API_KEY` environment variable.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Returns
+
+A configured `Context7` client instance.
+
+### Throws
+
+- `Context7Error`: If no API key is provided and `CONTEXT7_API_KEY` environment variable is not set
+
+## Configuration Options
+
+### Using Environment Variables
+
+The recommended approach for production applications:
+
+```typescript
+// Set environment variable
+process.env.CONTEXT7_API_KEY = 'ctx7sk-your-api-key';
+
+// Initialize without config
+const client = new Context7();
+```
+
+### Using Direct Configuration
+
+Useful for testing or when you need multiple clients:
+
+```typescript
+const client = new Context7({
+  apiKey: 'ctx7sk-your-api-key'
+});
+```
+
+### Priority Order
+
+When both methods are used, the constructor parameter takes precedence:
+
+```typescript
+process.env.CONTEXT7_API_KEY = 'ctx7sk-env-key';
+
+const client = new Context7({
+  apiKey: 'ctx7sk-config-key' // This one will be used
+});
+```
+
+## Built-in Features
+
+The client automatically configures several features:
+
+### Automatic Retries
+
+Failed requests are retried up to 5 times with exponential backoff:
+
+- Retry 1: ~50ms delay
+- Retry 2: ~135ms delay
+- Retry 3: ~403ms delay
+- Retry 4: ~1.1s delay
+- Retry 5: ~3s delay
+
+### Authentication
+
+API key is automatically included in all requests as a Bearer token in the Authorization header.
+
+### Cache Control
+
+Requests are configured with `cache: "no-store"` to ensure fresh results.
+
+## Error Handling
+
+### Missing API Key
+
+```typescript
+try {
+  const client = new Context7(); // No API key provided
+} catch (error) {
+  if (error instanceof Context7Error) {
+    console.error(error.message);
+    // "API key is required. Pass it in the config or set CONTEXT7_API_KEY environment variable."
+  }
+}
+```
+
+### Invalid API Key Format
+
+If your API key doesn't start with `ctx7sk`, you'll see a warning:
+
+```typescript
+const client = new Context7({ apiKey: 'invalid-key' });
+// Console warning: "API key should start with 'ctx7sk'"
+```
+
+## Usage Examples
+
+### Basic Setup
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({
+  apiKey: process.env.CONTEXT7_API_KEY
+});
+
+// Client is ready to use
+const libraries = await client.searchLibrary('query', 'react');
+```
+
+### Multiple Clients
+
+Create separate clients for different API keys or use cases:
+
+```typescript
+const productionClient = new Context7({
+  apiKey: process.env.CONTEXT7_PRODUCTION_KEY
+});
+
+const testClient = new Context7({
+  apiKey: process.env.CONTEXT7_TEST_KEY
+});
+```
+
+### Singleton Pattern
+
+Reuse a single client instance across your application:
+
+```typescript
+// lib/context7.ts
+import { Context7 } from '@upstash/context7-sdk';
+
+export const context7Client = new Context7({
+  apiKey: process.env.CONTEXT7_API_KEY
+});
+```
+
+```typescript
+// app/api/search/route.ts
+import { context7Client } from '@/lib/context7';
+
+export async function GET(request: Request) {
+  const libraries = await context7Client.searchLibrary('query', 'react');
+  return Response.json(libraries);
+}
+```
+
+### Edge Runtime (Next.js, Cloudflare Workers)
+
+The SDK works in edge runtimes:
+
+```typescript
+// app/api/docs/route.ts
+import { Context7 } from '@upstash/context7-sdk';
+
+export const runtime = 'edge';
+
+export async function GET(request: Request) {
+  const client = new Context7({
+    apiKey: process.env.CONTEXT7_API_KEY
+  });
+  
+  const docs = await client.getContext('hooks', '/facebook/react');
+  return Response.json(docs);
+}
+```
+
+## Type Definitions
+
+### Context7Config
+
+```typescript
+interface Context7Config {
+  apiKey?: string;
+}
+```
+
+### Context7Error
+
+```typescript
+class Context7Error extends Error {
+  name: 'Context7Error';
+  message: string;
+}
+```
+
+## Available Methods
+
+Once initialized, the client provides two main methods:
+
+<CardGroup cols={2}>
+  <Card title="searchLibrary" icon="magnifying-glass" href="/sdk/search-library">
+    Search for libraries by name and query
+  </Card>
+  <Card title="getContext" icon="book" href="/sdk/get-context">
+    Retrieve documentation snippets for a library
+  </Card>
+</CardGroup>

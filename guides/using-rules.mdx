@@ -1,0 +1,334 @@
+---
+title: 'Using Rules'
+description: 'Set up automatic Context7 invocation with rules'
+---
+
+## Overview
+
+Rules allow you to automatically invoke Context7 for code-related questions without explicitly typing `use context7` in every prompt.
+
+<Tip>
+  Setting up a rule is the most effective way to integrate Context7 into your workflow.
+</Tip>
+
+## Why Use Rules?
+
+Without a rule, you need to remember to add `use context7` to every prompt:
+
+```txt
+Create a Next.js middleware that checks for a valid JWT. use context7
+```
+
+With a rule configured, Context7 is automatically invoked when needed:
+
+```txt
+Create a Next.js middleware that checks for a valid JWT.
+```
+
+The AI assistant automatically detects that this is a code-related question and invokes Context7 behind the scenes.
+
+## Setting Up Rules
+
+The setup process varies by AI coding assistant.
+
+<Tabs>
+  <Tab title="Cursor">
+    ### Cursor Rules Setup
+
+    <Steps>
+      <Step title="Open Cursor Settings">
+        Go to `Settings` → `Cursor Settings` → `Rules`
+      </Step>
+
+      <Step title="Add a new rule">
+        Click **Add new rule** or edit your existing rules file.
+      </Step>
+
+      <Step title="Add the Context7 rule">
+        ```txt
+        Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+        ```
+      </Step>
+
+      <Step title="Save and test">
+        Save the rule and try asking a code-related question without `use context7`.
+      </Step>
+    </Steps>
+
+    <Info>
+      Cursor rules can be set globally (user-level) or per-project. Project-level rules are stored in `.cursorrules` in your project root.
+    </Info>
+  </Tab>
+
+  <Tab title="Claude Code">
+    ### Claude Code Rules Setup
+
+    <Steps>
+      <Step title="Create CLAUDE.md">
+        Create a file named `CLAUDE.md` in your project root directory.
+      </Step>
+
+      <Step title="Add the Context7 rule">
+        ```markdown CLAUDE.md
+        # Project Instructions
+
+        ## Context7 Integration
+
+        Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+        ```
+      </Step>
+
+      <Step title="Save and restart">
+        Save the file. Claude Code will automatically detect and apply the rules.
+      </Step>
+    </Steps>
+
+    <Note>
+      `CLAUDE.md` is Claude Code's standard file for project-specific instructions.
+    </Note>
+  </Tab>
+
+  <Tab title="Other Clients">
+    ### Other MCP Clients
+
+    Most MCP clients support some form of rules or instructions. Common locations:
+
+    - **Instructions file**: `.ai/instructions.md`, `.mcp/rules.md`
+    - **Settings**: Check your client's settings panel
+    - **Configuration**: Look for a `rules` or `instructions` field in config files
+
+    **Rule text to use:**
+
+    ```txt
+    Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+    ```
+
+    <Tip>
+      Consult your MCP client's documentation for specific rule configuration instructions.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Recommended Rule Examples
+
+Here are different rule variations you can use depending on your needs:
+
+### Basic Rule (Recommended)
+
+```txt
+Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+```
+
+**When to use:** General development work across various technologies.
+
+### Specific Technology Focus
+
+```txt
+When working with web frameworks (Next.js, React, Vue), databases (Supabase, MongoDB), or cloud platforms (Vercel, Cloudflare), automatically use Context7 MCP to fetch current documentation and code examples.
+```
+
+**When to use:** When your project focuses on specific technologies.
+
+### Always-On Rule
+
+```txt
+Use Context7 MCP for any code-related question or task automatically.
+```
+
+**When to use:** When you want maximum automation.
+
+<Warning>
+  Very broad rules may cause Context7 to be invoked for questions that don't need it, potentially slowing down responses. The basic rule is usually the best balance.
+</Warning>
+
+### Version-Specific Rule
+
+```txt
+Always use Context7 MCP for library documentation. When I mention a specific version (e.g., "Next.js 14"), ensure Context7 retrieves version-specific documentation.
+```
+
+**When to use:** When working with specific versions of libraries.
+
+## Advanced Rule Configuration
+
+### Project-Specific Rules
+
+Combine Context7 rules with project-specific instructions:
+
+```markdown .cursorrules
+# Project: E-commerce Platform
+
+## Technologies
+- Next.js 14
+- Supabase for auth and database
+- Stripe for payments
+
+## Context7 Usage
+Always use Context7 MCP when working with Next.js, Supabase, or Stripe. 
+Prefer official documentation and recent code examples.
+
+## Code Style
+- Use TypeScript strict mode
+- Follow Airbnb style guide
+```
+
+### Combining with Library IDs
+
+You can specify preferred library IDs in your rules:
+
+```txt
+When working with:
+- React: use library /facebook/react
+- Next.js: use library /vercel/next.js
+- Supabase: use library /supabase/supabase
+
+Automatically invoke Context7 MCP for these libraries.
+```
+
+## Using ctx7 Setup Command
+
+The easiest way to set up both the MCP server and rules is with the `ctx7 setup` command:
+
+<CodeGroup>
+
+```bash Cursor
+ctx7 setup --cursor
+```
+
+```bash Claude Code
+ctx7 setup --claude
+```
+
+```bash OpenCode
+ctx7 setup --opencode
+```
+
+```bash Interactive
+ctx7 setup
+```
+
+</CodeGroup>
+
+This command:
+1. Authenticates via OAuth
+2. Generates an API key
+3. Configures the MCP server
+4. Sets up the recommended rule
+
+<Info>
+  See the [CLI documentation](https://www.npmjs.com/package/ctx7) for more setup options.
+</Info>
+
+## Testing Your Rule
+
+After setting up a rule, test it with these prompts (without adding `use context7`):
+
+<AccordionGroup>
+  <Accordion title="Test 1: Framework-specific question">
+    ```txt
+    How do I create a server action in Next.js?
+    ```
+    
+    **Expected:** Context7 should be invoked automatically.
+  </Accordion>
+
+  <Accordion title="Test 2: Library setup question">
+    ```txt
+    Show me how to configure Supabase authentication.
+    ```
+    
+    **Expected:** Context7 should be invoked automatically.
+  </Accordion>
+
+  <Accordion title="Test 3: General coding question">
+    ```txt
+    How do I reverse a string in JavaScript?
+    ```
+    
+    **Expected:** Context7 may or may not be invoked (this is basic JavaScript that LLMs know well).
+  </Accordion>
+
+  <Accordion title="Test 4: Non-code question">
+    ```txt
+    What's the weather like today?
+    ```
+    
+    **Expected:** Context7 should NOT be invoked.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting Rules
+
+<AccordionGroup>
+  <Accordion title="Rule not working in Cursor" icon="cursor">
+    **Solutions:**
+    
+    1. Verify the rule is saved in `Cursor Settings > Rules`
+    2. Try restarting Cursor
+    3. Check if you have conflicting rules
+    4. Ensure Context7 MCP is properly installed and enabled
+    5. Try making the rule more explicit:
+       ```txt
+       You must use Context7 MCP for any question about libraries, APIs, or frameworks.
+       ```
+  </Accordion>
+
+  <Accordion title="Rule not working in Claude Code" icon="file">
+    **Solutions:**
+    
+    1. Verify `CLAUDE.md` is in your project root
+    2. Check the file name is exactly `CLAUDE.md` (all caps)
+    3. Restart Claude Code
+    4. Check Claude Code's output logs for any parsing errors
+  </Accordion>
+
+  <Accordion title="Context7 invoked too often" icon="triangle-exclamation">
+    **Solutions:**
+    
+    1. Make your rule more specific:
+       ```txt
+       Use Context7 MCP only when I ask about specific libraries, frameworks, or APIs.
+       ```
+    2. Add exclusions:
+       ```txt
+       Use Context7 MCP for library documentation, but not for basic programming concepts or general questions.
+       ```
+  </Accordion>
+
+  <Accordion title="Context7 not invoked when needed" icon="ban">
+    **Solutions:**
+    
+    1. Make your rule more aggressive:
+       ```txt
+       Always use Context7 MCP for any code-related question.
+       ```
+    2. Temporarily add `use context7` to your prompts while debugging
+    3. Check MCP server logs for errors
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Simple" icon="circle-1">
+    Begin with the basic recommended rule and adjust based on your experience.
+  </Card>
+  
+  <Card title="Be Specific" icon="circle-2">
+    Mention the technologies or libraries relevant to your project.
+  </Card>
+  
+  <Card title="Iterate" icon="circle-3">
+    Refine your rule over time based on what works best for your workflow.
+  </Card>
+  
+  <Card title="Document" icon="circle-4">
+    Keep your rules documented, especially in team projects.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<Card title="Learn about specifying versions" icon="tag" href="/guides/specifying-versions">
+  Learn how to request specific library versions in your prompts.
+</Card>

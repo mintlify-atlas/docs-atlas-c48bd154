@@ -1,0 +1,564 @@
+---
+title: 'Troubleshooting'
+description: 'Common issues and solutions for Context7'
+---
+
+## Overview
+
+This guide covers common issues you might encounter with Context7 MCP server and SDK, along with solutions.
+
+<Tip>
+  Most issues can be resolved by checking your MCP server configuration and API key setup.
+</Tip>
+
+## Installation Issues
+
+<AccordionGroup>
+  <Accordion title="MCP server not appearing in Cursor" icon="cursor">
+    **Symptoms:** Context7 doesn't show up in Cursor's MCP server list.
+    
+    **Solutions:**
+    
+    1. Verify your `~/.cursor/mcp.json` configuration:
+       ```json
+       {
+         "mcpServers": {
+           "context7": {
+             "url": "https://mcp.context7.com/mcp",
+             "headers": {
+               "CONTEXT7_API_KEY": "YOUR_API_KEY"
+             }
+           }
+         }
+       }
+       ```
+    
+    2. Check for JSON syntax errors (trailing commas, missing quotes)
+    3. Restart Cursor completely
+    4. Try the local server connection instead:
+       ```json
+       {
+         "mcpServers": {
+           "context7": {
+             "command": "npx",
+             "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+           }
+         }
+       }
+       ```
+    
+    5. Check Cursor's MCP logs in Settings > Output > Model Context Protocol
+  </Accordion>
+
+  <Accordion title="Context7 not working in Claude Code" icon="terminal">
+    **Symptoms:** `claude mcp add` command fails or Context7 doesn't work.
+    
+    **Solutions:**
+    
+    1. Verify the command syntax:
+       ```bash
+       claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+       ```
+    
+    2. Check Claude Code version (requires Claude Code 1.0+)
+    3. Try the remote server connection:
+       ```bash
+       claude mcp add --scope user --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+       ```
+    
+    4. List MCP servers to verify installation:
+       ```bash
+       claude mcp list
+       ```
+    
+    5. Check logs:
+       ```bash
+       claude mcp logs context7
+       ```
+  </Accordion>
+
+  <Accordion title="npm/npx errors during installation" icon="npm">
+    **Symptoms:** `npx @upstash/context7-mcp` fails with errors.
+    
+    **Solutions:**
+    
+    1. Update npm:
+       ```bash
+       npm install -g npm@latest
+       ```
+    
+    2. Clear npm cache:
+       ```bash
+       npm cache clean --force
+       ```
+    
+    3. Try installing globally first:
+       ```bash
+       npm install -g @upstash/context7-mcp
+       ```
+    
+    4. Check Node.js version (requires Node 18+):
+       ```bash
+       node --version
+       ```
+    
+    5. Use the remote server connection to avoid npm issues
+  </Accordion>
+
+  <Accordion title="Using ctx7 setup command fails" icon="terminal">
+    **Symptoms:** `npx ctx7 setup` fails or doesn't configure properly.
+    
+    **Solutions:**
+    
+    1. Ensure you're running the latest version:
+       ```bash
+       npx ctx7@latest setup
+       ```
+    
+    2. Try targeting a specific client:
+       ```bash
+       npx ctx7 setup --cursor
+       npx ctx7 setup --claude
+       npx ctx7 setup --opencode
+       ```
+    
+    3. Use an existing API key instead of OAuth:
+       ```bash
+       npx ctx7 setup --api-key YOUR_API_KEY
+       ```
+    
+    4. Check file permissions on config directories
+    5. Run with verbose output to see detailed errors
+  </Accordion>
+</AccordionGroup>
+
+## API Key Issues
+
+<AccordionGroup>
+  <Accordion title="Invalid API key error" icon="key">
+    **Symptoms:** "Invalid API key" or "Unauthorized" errors.
+    
+    **Solutions:**
+    
+    1. Verify your API key format (should start with `ctx7sk-`)
+    2. Check for extra spaces or quotes around the key
+    3. Get a new API key from [context7.com/dashboard](https://context7.com/dashboard)
+    4. Ensure the key is in the correct configuration field:
+       - Remote: `headers.CONTEXT7_API_KEY`
+       - Local: `--api-key` argument
+    5. Try regenerating your API key on the dashboard
+  </Accordion>
+
+  <Accordion title="Rate limit exceeded" icon="gauge-high">
+    **Symptoms:** "Rate limit exceeded" errors.
+    
+    **Solutions:**
+    
+    1. Get an API key if you're using Context7 without one
+    2. Upgrade your plan at [context7.com/dashboard](https://context7.com/dashboard)
+    3. Reduce the frequency of requests
+    4. Implement caching in SDK usage:
+       ```ts
+       const cache = new Map();
+       const cacheKey = `${libraryId}:${query}`;
+       if (cache.has(cacheKey)) {
+         return cache.get(cacheKey);
+       }
+       ```
+    5. Wait a few minutes before retrying
+  </Accordion>
+
+  <Accordion title="API key not being used" icon="circle-question">
+    **Symptoms:** Context7 works but shows free tier limits.
+    
+    **Solutions:**
+    
+    1. Verify the key is in the correct location in your config
+    2. Restart your MCP client after adding the key
+    3. Check that the header name is exactly `CONTEXT7_API_KEY`
+    4. For local connections, ensure `--api-key` flag is present
+    5. Check MCP server logs to see if the key is being sent
+  </Accordion>
+</AccordionGroup>
+
+## Query and Response Issues
+
+<AccordionGroup>
+  <Accordion title="Context7 returns wrong library" icon="book-x">
+    **Symptoms:** Getting documentation for a different library than requested.
+    
+    **Solutions:**
+    
+    1. Use the library ID syntax:
+       ```txt
+       use library /owner/repository for API and docs
+       ```
+    
+    2. Be more specific in your prompt:
+       ```txt
+       # Less specific
+       How do I use React?
+       
+       # More specific  
+       How do I use hooks in React 18?
+       ```
+    
+    3. Check if the library exists on [context7.com](https://context7.com)
+    4. Verify the library ID format:
+       - Correct: `/facebook/react`
+       - Incorrect: `facebook/react`, `/react`, `React`
+  </Accordion>
+
+  <Accordion title="Getting outdated documentation" icon="clock">
+    **Symptoms:** Documentation doesn't match current library version.
+    
+    **Solutions:**
+    
+    1. Specify the version in your prompt:
+       ```txt
+       How do I use Next.js 14 middleware? use context7
+       ```
+    
+    2. Request latest version explicitly:
+       ```txt
+       Show me the latest authentication methods for Supabase. use context7
+       ```
+    
+    3. Report the issue on [context7.com](https://context7.com) to trigger a re-crawl
+    4. Check when the library was last updated on Context7
+  </Accordion>
+
+  <Accordion title="No results or empty response" icon="empty-set">
+    **Symptoms:** Context7 returns no documentation.
+    
+    **Solutions:**
+    
+    1. Check if the library is indexed on [context7.com](https://context7.com)
+    2. Try a broader search:
+       ```txt
+       # Too specific
+       How do I use the obscureFunction in library X?
+       
+       # Better
+       Show me authentication examples for library X
+       ```
+    
+    3. Search for the library first:
+       ```ts
+       const libraries = await client.searchLibrary(
+         "authentication",
+         "supabase"
+       );
+       console.log(libraries); // Check if library exists
+       ```
+    
+    4. Submit the library if it's not indexed: See [Adding Libraries guide](/guides/adding-libraries)
+  </Accordion>
+
+  <Accordion title="Context7 not being invoked automatically" icon="robot">
+    **Symptoms:** Rule is set up but Context7 doesn't activate.
+    
+    **Solutions:**
+    
+    1. Verify your rule configuration:
+       - Cursor: `Settings > Rules`
+       - Claude Code: Check `CLAUDE.md` exists
+    
+    2. Make the rule more explicit:
+       ```txt
+       You MUST use Context7 MCP for any question about libraries, frameworks, or APIs.
+       ```
+    
+    3. Restart your MCP client
+    4. Temporarily add `use context7` manually while debugging
+    5. Check if other rules are conflicting
+    
+    See the [Using Rules guide](/guides/using-rules) for detailed setup.
+  </Accordion>
+
+  <Accordion title="Slow response times" icon="hourglass">
+    **Symptoms:** Context7 takes a long time to respond.
+    
+    **Solutions:**
+    
+    1. Use library IDs to skip search step:
+       ```txt
+       use library /vercel/next.js for API and docs
+       ```
+    
+    2. Switch to remote server if using local:
+       ```json
+       {
+         "url": "https://mcp.context7.com/mcp"
+       }
+       ```
+    
+    3. Check your internet connection
+    4. Verify API key is being used (authenticated requests are faster)
+    5. Try during off-peak hours if experiencing widespread slowness
+  </Accordion>
+</AccordionGroup>
+
+## SDK Issues
+
+<AccordionGroup>
+  <Accordion title="SDK import errors" icon="code">
+    **Symptoms:** Cannot import Context7 SDK.
+    
+    **Solutions:**
+    
+    1. Verify installation:
+       ```bash
+       npm list @upstash/context7-sdk
+       ```
+    
+    2. Reinstall the SDK:
+       ```bash
+       npm install @upstash/context7-sdk
+       ```
+    
+    3. Check import syntax:
+       ```ts
+       // Correct
+       import { Context7 } from "@upstash/context7-sdk";
+       
+       // Incorrect
+       import Context7 from "@upstash/context7-sdk";
+       ```
+    
+    4. Ensure TypeScript/Node version compatibility
+    5. Clear node_modules and reinstall:
+       ```bash
+       rm -rf node_modules package-lock.json
+       npm install
+       ```
+  </Accordion>
+
+  <Accordion title="Environment variable not loading" icon="env">
+    **Symptoms:** `CONTEXT7_API_KEY` env var not found.
+    
+    **Solutions:**
+    
+    1. Verify `.env` file location (should be in project root)
+    2. Load env vars in your code:
+       ```ts
+       import 'dotenv/config';
+       import { Context7 } from "@upstash/context7-sdk";
+       ```
+    
+    3. Check env var name (must be exactly `CONTEXT7_API_KEY`)
+    4. Restart your development server after adding env vars
+    5. Pass API key directly if env vars aren't working:
+       ```ts
+       const client = new Context7({
+         apiKey: "ctx7sk-..."
+       });
+       ```
+  </Accordion>
+
+  <Accordion title="TypeScript type errors" icon="typescript">
+    **Symptoms:** Type errors when using the SDK.
+    
+    **Solutions:**
+    
+    1. Ensure SDK types are installed:
+       ```bash
+       npm install --save-dev typescript @types/node
+       ```
+    
+    2. Check SDK version (update to latest):
+       ```bash
+       npm update @upstash/context7-sdk
+       ```
+    
+    3. Use proper types:
+       ```ts
+       const docs: Array<{ title: string; content: string; url: string }> = 
+         await client.getContext(query, libraryId);
+       ```
+    
+    4. Check TypeScript version compatibility
+  </Accordion>
+
+  <Accordion title="SDK timeout errors" icon="clock">
+    **Symptoms:** Requests timing out.
+    
+    **Solutions:**
+    
+    1. Increase timeout (SDK default is usually sufficient):
+       ```ts
+       const client = new Context7({
+         apiKey: process.env.CONTEXT7_API_KEY,
+         // Custom fetch with timeout if needed
+       });
+       ```
+    
+    2. Check network connectivity
+    3. Verify Context7 API status
+    4. Try with a simpler query to isolate the issue
+    5. Use library IDs to speed up queries
+  </Accordion>
+</AccordionGroup>
+
+## Connection Issues
+
+<AccordionGroup>
+  <Accordion title="Remote server connection fails" icon="server">
+    **Symptoms:** Cannot connect to `https://mcp.context7.com/mcp`.
+    
+    **Solutions:**
+    
+    1. Check internet connectivity
+    2. Verify the URL is correct (no typos)
+    3. Try the OAuth endpoint:
+       ```json
+       {
+         "url": "https://mcp.context7.com/mcp/oauth"
+       }
+       ```
+    
+    4. Check if your firewall is blocking the connection
+    5. Try local server connection as fallback:
+       ```json
+       {
+         "command": "npx",
+         "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+       }
+       ```
+  </Accordion>
+
+  <Accordion title="Local server connection fails" icon="laptop">
+    **Symptoms:** Local MCP server won't start.
+    
+    **Solutions:**
+    
+    1. Verify Node.js is installed:
+       ```bash
+       node --version
+       ```
+    
+    2. Check npm can access the package:
+       ```bash
+       npx -y @upstash/context7-mcp --help
+       ```
+    
+    3. Clear npx cache:
+       ```bash
+       rm -rf ~/.npm/_npx
+       ```
+    
+    4. Try installing globally:
+       ```bash
+       npm install -g @upstash/context7-mcp
+       ```
+       Then use:
+       ```json
+       {
+         "command": "context7-mcp",
+         "args": ["--api-key", "YOUR_API_KEY"]
+       }
+       ```
+    
+    5. Switch to remote server connection
+  </Accordion>
+
+  <Accordion title="OAuth authentication issues" icon="lock">
+    **Symptoms:** OAuth flow fails or doesn't complete.
+    
+    **Solutions:**
+    
+    1. Ensure your MCP client supports OAuth:
+       - Check [MCP OAuth specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization)
+    
+    2. Verify OAuth endpoint URL:
+       ```json
+       {
+         "url": "https://mcp.context7.com/mcp/oauth"
+       }
+       ```
+    
+    3. Clear browser cookies and try again
+    4. Use API key authentication instead:
+       ```json
+       {
+         "url": "https://mcp.context7.com/mcp",
+         "headers": {
+           "CONTEXT7_API_KEY": "YOUR_API_KEY"
+         }
+       }
+       ```
+    
+    5. Contact Context7 support if OAuth is required for your use case
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+If you're still experiencing issues:
+
+<CardGroup cols={2}>
+  <Card title="Check Documentation" icon="book" href="https://context7.com/docs">
+    Browse the full Context7 documentation.
+  </Card>
+  
+  <Card title="Join Discord" icon="discord" href="https://upstash.com/discord">
+    Get help from the community.
+  </Card>
+  
+  <Card title="GitHub Issues" icon="github" href="https://github.com/upstash/context7/issues">
+    Report bugs or request features.
+  </Card>
+  
+  <Card title="Contact Support" icon="envelope" href="https://context7.com">
+    Reach out to the Context7 team.
+  </Card>
+</CardGroup>
+
+## Diagnostic Checklist
+
+Before reporting an issue, gather this information:
+
+<Steps>
+  <Step title="MCP client and version">
+    - Which client? (Cursor, Claude Code, etc.)
+    - Version number
+  </Step>
+  
+  <Step title="Connection type">
+    - Remote or local server?
+    - Full configuration (with API key redacted)
+  </Step>
+  
+  <Step title="Error messages">
+    - Complete error text
+    - MCP server logs
+    - Client logs
+  </Step>
+  
+  <Step title="Steps to reproduce">
+    - Exact prompt or code used
+    - Expected vs actual behavior
+  </Step>
+  
+  <Step title="Environment">
+    - Operating system
+    - Node.js version (if using local server)
+    - Network setup (proxy, VPN, firewall)
+  </Step>
+</Steps>
+
+<Tip>
+  Having this information ready will help maintainers and community members assist you faster.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Best Practices" icon="star" href="/guides/best-practices">
+    Learn how to use Context7 effectively.
+  </Card>
+  
+  <Card title="Using Rules" icon="file-lines" href="/guides/using-rules">
+    Set up automatic Context7 invocation.
+  </Card>
+</CardGroup>

@@ -1,0 +1,274 @@
+---
+title: 'Best Practices'
+description: 'Get the most out of Context7 MCP server and SDK'
+---
+
+## Overview
+
+Follow these best practices to maximize the value of Context7 in your AI-powered development workflow.
+
+## Use Rules for Automatic Invocation
+
+Instead of typing `use context7` in every prompt, set up a rule to automatically invoke Context7 for code-related questions.
+
+<Tip>
+  This is the single most impactful change you can make to improve your Context7 experience.
+</Tip>
+
+Add a rule to your AI coding assistant:
+
+- **Cursor**: `Cursor Settings > Rules`
+- **Claude Code**: Create a `CLAUDE.md` file
+- **Other clients**: Check your client's documentation for rule configuration
+
+**Example rule:**
+
+```txt
+Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+```
+
+See the [Using Rules guide](/guides/using-rules) for detailed setup instructions.
+
+## Specify Library IDs for Faster Results
+
+If you know exactly which library you want to use, include its Context7 ID in your prompt. This allows Context7 to skip the library-matching step and directly retrieve documentation.
+
+<CodeGroup>
+
+```txt Without Library ID
+Implement basic authentication with Supabase. use context7
+```
+
+```txt With Library ID
+Implement basic authentication with Supabase. use library /supabase/supabase for API and docs.
+```
+
+</CodeGroup>
+
+**Benefits:**
+- Faster response times
+- More accurate documentation retrieval
+- No ambiguity when multiple libraries have similar names
+
+### Finding Library IDs
+
+Library IDs follow the format `/owner/repository`. You can find them by:
+
+1. Searching on [context7.com](https://context7.com)
+2. Using the `resolve-library-id` MCP tool
+3. Checking the library's GitHub repository URL
+
+<Note>
+  Library IDs are case-sensitive and must include the leading slash.
+</Note>
+
+## Request Specific Versions
+
+For version-specific documentation, mention the version in your prompt:
+
+```txt
+How do I set up Next.js 14 middleware? use context7
+```
+
+Context7 will automatically match the appropriate version documentation.
+
+<Info>
+  See the [Specifying Versions guide](/guides/specifying-versions) for more details on version syntax.
+</Info>
+
+## Write Clear, Specific Prompts
+
+The quality of Context7's responses depends on your prompt clarity.
+
+### Good Prompts
+
+<AccordionGroup>
+  <Accordion title="Good: Specific task with context">
+    ```txt
+    Create a Next.js middleware that checks for a valid JWT in cookies
+    and redirects unauthenticated users to `/login`. use context7
+    ```
+    
+    **Why it's good:** Clearly states the technology (Next.js), the specific task (middleware with JWT validation), and the desired behavior.
+  </Accordion>
+
+  <Accordion title="Good: Technology and version specified">
+    ```txt
+    Configure a Cloudflare Worker script to cache JSON API
+    responses for five minutes. use context7
+    ```
+    
+    **Why it's good:** Identifies the platform (Cloudflare Workers), the action (caching), and specific requirements (JSON, 5 minutes).
+  </Accordion>
+
+  <Accordion title="Good: Library and version included">
+    ```txt
+    How do I implement real-time subscriptions with Supabase v2? use context7
+    ```
+    
+    **Why it's good:** Specifies the library, feature, and version.
+  </Accordion>
+</AccordionGroup>
+
+### Prompts to Avoid
+
+<AccordionGroup>
+  <Accordion title="Too vague">
+    ```txt
+    How do I use React? use context7
+    ```
+    
+    **Problem:** Too broad. Specify what you want to do with React (hooks, components, routing, etc.).
+  </Accordion>
+
+  <Accordion title="Missing context">
+    ```txt
+    Fix this authentication bug. use context7
+    ```
+    
+    **Problem:** No indication of which library or framework you're using.
+  </Accordion>
+
+  <Accordion title="Multiple unrelated topics">
+    ```txt
+    How do I set up MongoDB and also create a React app and deploy to Vercel? use context7
+    ```
+    
+    **Problem:** Too many topics at once. Break into separate prompts for better results.
+  </Accordion>
+</AccordionGroup>
+
+## Use the Right API Key
+
+While Context7 works without an API key, you'll get significantly better performance with one.
+
+<CardGroup cols={2}>
+  <Card title="Without API Key" icon="gauge-low">
+    - Lower rate limits
+    - Slower responses
+    - No usage analytics
+  </Card>
+  <Card title="With API Key" icon="gauge-high">
+    - Higher rate limits
+    - Faster responses
+    - Usage tracking
+    - Priority support
+  </Card>
+</CardGroup>
+
+<Tip>
+  Get a free API key at [context7.com/dashboard](https://context7.com/dashboard)
+</Tip>
+
+## SDK Best Practices
+
+If you're building with the Context7 SDK:
+
+### Use Environment Variables
+
+Store your API key in environment variables:
+
+```sh .env
+CONTEXT7_API_KEY=ctx7sk-...
+```
+
+```ts
+import { Context7 } from "@upstash/context7-sdk";
+
+const client = new Context7();
+// API key is automatically loaded from CONTEXT7_API_KEY env var
+```
+
+### Choose the Right Response Type
+
+```ts
+// For structured processing (default)
+const docs = await client.getContext(
+  "How do I use hooks?",
+  "/facebook/react"
+);
+// Returns: Array of { title, content, url }
+
+// For direct LLM consumption
+const context = await client.getContext(
+  "How do I use hooks?",
+  "/facebook/react",
+  { type: "txt" }
+);
+// Returns: Plain text string ready for prompt injection
+```
+
+### Search Before Querying
+
+Always search for the library first to get the correct ID:
+
+```ts
+// 1. Search for the library
+const libraries = await client.searchLibrary(
+  "I need to build a UI with components",
+  "react"
+);
+
+// 2. Use the library ID to get documentation
+const docs = await client.getContext(
+  "How do I use hooks?",
+  libraries[0].id
+);
+```
+
+## Performance Tips
+
+### Cache Results When Possible
+
+If you're building an application with the SDK, cache documentation results to reduce API calls:
+
+```ts
+const cache = new Map();
+
+async function getCachedContext(query: string, libraryId: string) {
+  const key = `${libraryId}:${query}`;
+  
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  
+  const result = await client.getContext(query, libraryId);
+  cache.set(key, result);
+  return result;
+}
+```
+
+### Batch Related Queries
+
+If you need documentation for multiple related topics, make separate focused queries rather than one broad query:
+
+```ts
+// Good: Focused queries
+const authDocs = await client.getContext(
+  "How do I implement authentication?",
+  "/supabase/supabase"
+);
+
+const storageDocs = await client.getContext(
+  "How do I upload files to storage?",
+  "/supabase/supabase"
+);
+
+// Less ideal: One broad query
+const docs = await client.getContext(
+  "How do I use authentication and storage?",
+  "/supabase/supabase"
+);
+```
+
+## Stay Updated
+
+Context7 regularly adds new libraries and improves existing documentation.
+
+- Visit [context7.com](https://context7.com) to browse available libraries
+- Check the [changelog](https://context7.com/changelog) for new features
+- Join the [Discord community](https://upstash.com/discord) for updates and support
+
+<Warning>
+  If you don't see your library on Context7, you can [submit it](/guides/adding-libraries) to the registry.
+</Warning>

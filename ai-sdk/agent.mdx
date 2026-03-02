@@ -1,0 +1,467 @@
+---
+title: 'Context7Agent'
+description: 'Pre-configured agent for documentation lookup with Vercel AI SDK'
+---
+
+## Overview
+
+The `Context7Agent` is a pre-configured [Vercel AI SDK agent](https://ai-sdk.dev/docs/ai-sdk-core/agents) that automatically handles the multi-step workflow for documentation lookup.
+
+It extends `ToolLoopAgent` and comes pre-configured with:
+- `resolveLibraryId` and `queryDocs` tools
+- Optimized system prompt for documentation retrieval
+- Sensible defaults for step count and workflow
+
+## Class Signature
+
+```typescript
+class Context7Agent extends ToolLoopAgent<never, ToolSet>
+```
+
+## Configuration
+
+```typescript
+interface Context7AgentConfig extends ToolLoopAgentSettings<never, ToolSet> {
+  /**
+   * Context7 API key. If not provided, uses the CONTEXT7_API_KEY environment variable.
+   */
+  apiKey?: string;
+}
+```
+
+### Inherited Settings from ToolLoopAgentSettings
+
+- `model` - The AI model to use (required)
+- `instructions` - Custom system prompt (optional, defaults to optimized prompt)
+- `stopWhen` - Condition to stop agent execution (optional, defaults to `stepCountIs(5)`)
+- `tools` - Additional tools to include alongside Context7 tools (optional)
+- `maxSteps` - Maximum number of steps (deprecated, use `stopWhen` instead)
+- `onStepFinish` - Callback after each step
+
+## Basic Usage
+
+### Simple Query
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+});
+
+const result = await agent.generate({
+  prompt: 'How do I use React Server Components?',
+});
+
+console.log(result.text);
+```
+
+### With Custom API Key
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new Context7Agent({
+  model: openai('gpt-4o'),
+  apiKey: 'ctx7sk-...',
+});
+
+const result = await agent.generate({
+  prompt: 'How do I set up routing in Next.js?',
+});
+
+console.log(result.text);
+```
+
+## Advanced Configuration
+
+### Custom Stop Condition
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { stepCountIs } from 'ai';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  stopWhen: stepCountIs(3), // Limit to 3 steps
+});
+
+const result = await agent.generate({
+  prompt: 'Explain Next.js data fetching',
+});
+```
+
+### Custom Instructions
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+const customInstructions = `
+You are a specialized Next.js documentation assistant.
+
+Always:
+1. Search for the latest Next.js documentation
+2. Provide App Router examples when applicable
+3. Include TypeScript code samples
+4. Cite the documentation version used
+`;
+
+const agent = new Context7Agent({
+  model: openai('gpt-4o'),
+  instructions: customInstructions,
+});
+
+const result = await agent.generate({
+  prompt: 'How do I create API routes?',
+});
+```
+
+### Adding Custom Tools
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const searchWebTool = tool({
+  description: 'Search the web for additional context',
+  inputSchema: z.object({
+    query: z.string().describe('Search query'),
+  }),
+  execute: async ({ query }) => {
+    // Your implementation
+    return { results: [] };
+  },
+});
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  tools: {
+    searchWeb: searchWebTool,
+  },
+});
+
+// Agent now has access to: resolveLibraryId, queryDocs, and searchWeb
+const result = await agent.generate({
+  prompt: 'Find React docs and latest community discussions',
+});
+```
+
+## Agent Workflow
+
+The agent follows this multi-step workflow:
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+});
+
+const result = await agent.generate({
+  prompt: 'How do I implement server actions in Next.js?',
+});
+
+// Internal workflow:
+// Step 1: Extract library name ("Next.js") from prompt
+// Step 2: Call resolveLibraryId({ query: "...", libraryName: "Next.js" })
+// Step 3: Analyze results and select best library ID (e.g., /vercel/next.js)
+// Step 4: Call queryDocs({ libraryId: "/vercel/next.js", query: "server actions" })
+// Step 5: Synthesize answer with code examples from documentation
+
+console.log(result.text);
+console.log('Steps taken:', result.steps.length);
+```
+
+## Streaming Responses
+
+### Text Streaming
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new Context7Agent({
+  model: openai('gpt-4o'),
+});
+
+const result = await agent.stream({
+  prompt: 'Explain React hooks with examples',
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+### Full Stream with Tool Calls
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+});
+
+const result = await agent.stream({
+  prompt: 'How do I use Vue composables?',
+});
+
+for await (const part of result.fullStream) {
+  switch (part.type) {
+    case 'text-delta':
+      process.stdout.write(part.textDelta);
+      break;
+    case 'tool-call':
+      console.log('Calling tool:', part.toolName);
+      break;
+    case 'tool-result':
+      console.log('Tool result received');
+      break;
+  }
+}
+```
+
+## Default System Prompt
+
+The agent uses this optimized prompt by default:
+
+```
+You are a documentation search assistant powered by Context7.
+
+CRITICAL WORKFLOW - YOU MUST FOLLOW THESE STEPS:
+
+Step 1: ALWAYS start by calling 'resolveLibraryId' with the library name from the user's query
+   - Extract the main library/framework name (e.g., "React", "Next.js", "Vue")
+   - Call resolveLibraryId with just the library name
+   - Review ALL the search results returned
+
+Step 2: Analyze the results from resolveLibraryId and select the BEST library ID based on:
+   - Official sources (e.g., /reactjs/react.dev for React, /vercel/next.js for Next.js)
+   - Name similarity to what the user is looking for
+   - Description relevance
+   - Source reputation (High/Medium is better)
+   - Code snippet coverage (higher is better)
+   - Benchmark score (higher is better)
+
+Step 3: Call 'queryDocs' with the selected library ID and the user's query
+   - Use the exact library ID from the resolveLibraryId results
+   - Include the user's original question as the query parameter
+
+Step 4: Provide a clear answer with code examples from the documentation
+
+IMPORTANT:
+- You MUST call resolveLibraryId first before calling queryDocs
+- Do NOT skip resolveLibraryId - it helps you find the correct official documentation
+- Do not call either tool more than 3 times per question
+- Always cite which library ID you used
+```
+
+## Step Tracking
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { stepCountIs } from 'ai';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  stopWhen: stepCountIs(5),
+});
+
+const result = await agent.generate({
+  prompt: 'How do I use React hooks?',
+});
+
+// Inspect all steps
+for (const [index, step] of result.steps.entries()) {
+  console.log(`Step ${index + 1}:`);
+  console.log('Tool calls:', step.toolCalls.map(tc => tc.toolName));
+  console.log('Text:', step.text);
+}
+
+// Get all tool calls across all steps
+const allToolCalls = result.steps.flatMap(step => step.toolCalls);
+console.log('Total tools called:', allToolCalls.length);
+```
+
+## Step Callbacks
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new Context7Agent({
+  model: openai('gpt-4o'),
+  onStepFinish: ({ text, toolCalls, toolResults }) => {
+    console.log('Step completed');
+    console.log('Tools called:', toolCalls.map(tc => tc.toolName));
+    console.log('Generated text:', text);
+  },
+});
+
+const result = await agent.generate({
+  prompt: 'Explain Next.js middleware',
+});
+```
+
+## Error Handling
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  apiKey: 'ctx7sk-...',
+});
+
+try {
+  const result = await agent.generate({
+    prompt: 'How do I use an obscure-library?',
+  });
+  console.log(result.text);
+} catch (error) {
+  if (error instanceof Error) {
+    console.error('Agent error:', error.message);
+  }
+}
+```
+
+## Complete Example
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { stepCountIs, tool } from 'ai';
+import { z } from 'zod';
+
+// Custom tool for saving code snippets
+const saveSnippet = tool({
+  description: 'Save code snippet to database',
+  inputSchema: z.object({
+    code: z.string(),
+    language: z.string(),
+    description: z.string(),
+  }),
+  execute: async ({ code, language, description }) => {
+    // Save to your database
+    console.log('Saving snippet:', description);
+    return { saved: true, id: 'snippet-123' };
+  },
+});
+
+// Create agent with custom configuration
+const agent = new Context7Agent({
+  model: anthropic('claude-sonnet-4-20250514'),
+  apiKey: process.env.CONTEXT7_API_KEY,
+  stopWhen: stepCountIs(6),
+  tools: {
+    saveSnippet,
+  },
+  onStepFinish: ({ toolCalls, text }) => {
+    console.log('\n--- Step Complete ---');
+    console.log('Tools:', toolCalls.map(tc => tc.toolName).join(', '));
+    if (text) console.log('Response:', text.slice(0, 100) + '...');
+  },
+});
+
+// Generate response
+const result = await agent.generate({
+  prompt: 'Find React useEffect documentation and save an example',
+});
+
+console.log('\n=== Final Result ===');
+console.log(result.text);
+console.log('\nSteps taken:', result.steps.length);
+console.log('Tools used:', 
+  result.steps
+    .flatMap(s => s.toolCalls)
+    .map(tc => tc.toolName)
+    .join(' → ')
+);
+```
+
+## Comparison with Direct Tool Usage
+
+### Using Tools Directly
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+// You manage the workflow
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'How do I use React hooks?',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+```
+
+### Using Context7Agent
+
+```typescript
+import { Context7Agent } from '@upstash/context7-tools-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+// Agent handles the workflow with optimized prompt
+const agent = new Context7Agent({
+  model: openai('gpt-4o'),
+});
+
+const { text } = await agent.generate({
+  prompt: 'How do I use React hooks?',
+});
+```
+
+**Use the agent when:**
+- You want optimized documentation retrieval out-of-the-box
+- You need consistent behavior across multiple queries
+- You want to extend with additional tools while keeping Context7 workflow
+
+**Use tools directly when:**
+- You need full control over the system prompt
+- You're integrating into an existing agent architecture
+- You want to customize the tool selection logic
+
+## Type Exports
+
+```typescript
+import type { Context7AgentConfig } from '@upstash/context7-tools-ai-sdk';
+
+// Use for type-safe configuration
+const config: Context7AgentConfig = {
+  model: openai('gpt-4o'),
+  apiKey: 'ctx7sk-...',
+  stopWhen: stepCountIs(5),
+};
+
+const agent = new Context7Agent(config);
+```
+
+## Best Practices
+
+1. **Set reasonable step limits**: Use `stopWhen: stepCountIs(5)` to prevent excessive API calls
+2. **Use streaming for better UX**: Stream responses to show progress to users
+3. **Add custom tools carefully**: Don't overwhelm the agent with too many tools
+4. **Monitor steps**: Use `onStepFinish` to track agent behavior and debug issues
+5. **Handle errors gracefully**: Wrap `generate()` calls in try-catch blocks
+6. **Reuse agent instances**: Create one agent and use it for multiple queries
+
+## Next Steps
+
+<Card title="Tools Reference" icon="wrench" href="/ai-sdk/tools">
+  Learn more about resolveLibraryId and queryDocs tools
+</Card>

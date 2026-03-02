@@ -1,0 +1,115 @@
+---
+title: Installation
+description: Install the Context7 JavaScript/TypeScript SDK in your project
+---
+
+## Package Manager
+
+Install the SDK using your preferred package manager:
+
+<CodeGroup>
+
+```bash npm
+npm install @upstash/context7-sdk
+```
+
+```bash yarn
+yarn add @upstash/context7-sdk
+```
+
+```bash pnpm
+pnpm add @upstash/context7-sdk
+```
+
+</CodeGroup>
+
+## Requirements
+
+- Node.js 16+ or modern browser environment
+- TypeScript 4.5+ (optional, for TypeScript projects)
+
+## API Key
+
+You'll need a Context7 API key to use the SDK. Get one from [context7.com](https://context7.com).
+
+API keys follow the format: `ctx7sk-...`
+
+## Environment Setup
+
+### Environment Variable (Recommended)
+
+Set your API key as an environment variable:
+
+<CodeGroup>
+
+```bash .env
+CONTEXT7_API_KEY=ctx7sk-your-api-key-here
+```
+
+```bash Shell
+export CONTEXT7_API_KEY=ctx7sk-your-api-key-here
+```
+
+</CodeGroup>
+
+Then initialize the client without passing the key:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7();
+```
+
+### Direct Configuration
+
+Alternatively, pass the API key directly to the constructor:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({
+  apiKey: 'ctx7sk-your-api-key-here'
+});
+```
+
+<Warning>
+Never commit API keys to version control. Use environment variables or secure secret management.
+</Warning>
+
+## TypeScript Support
+
+The SDK is written in TypeScript and includes full type definitions. No additional `@types` packages are needed.
+
+```typescript
+import { Context7, Library, Documentation } from '@upstash/context7-sdk';
+
+const client = new Context7();
+
+// Full type inference
+const libraries: Library[] = await client.searchLibrary('react', 'react');
+const docs: Documentation[] = await client.getContext('hooks', '/facebook/react');
+```
+
+## Verification
+
+Verify your installation with a quick test:
+
+```typescript
+import { Context7 } from '@upstash/context7-sdk';
+
+const client = new Context7({ apiKey: 'ctx7sk-...' });
+
+try {
+  const libraries = await client.searchLibrary('test query', 'react');
+  console.log(`Found ${libraries.length} libraries`);
+  console.log('SDK is working correctly!');
+} catch (error) {
+  console.error('SDK error:', error);
+}
+```
+
+## Next Steps
+
+<Card title="Client Configuration" icon="gear" href="/sdk/client">
+  Learn how to initialize and configure the Context7 client
+</Card>

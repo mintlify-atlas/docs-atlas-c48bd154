@@ -1,0 +1,201 @@
+---
+title: CLI Overview
+description: Introduction to the ctx7 command-line interface for managing AI coding skills
+---
+
+The `ctx7` CLI is a command-line tool for managing AI coding skills and documentation context. It allows you to search, install, and generate skills for AI coding agents like Claude Code, Cursor, OpenCode, and Antigravity.
+
+## Installation
+
+```bash
+npx ctx7
+```
+
+Or install globally:
+
+```bash
+npm install -g ctx7
+```
+
+## Quick Start
+
+```bash
+# Search for skills
+npx ctx7 skills search pdf
+
+# Install from a repository
+npx ctx7 skills install /anthropics/skills
+
+# Set up Context7 MCP for your agent
+npx ctx7 setup
+```
+
+## Main Commands
+
+<CardGroup cols={2}>
+  <Card title="skills" icon="code" href="/cli/skills">
+    Search, install, list, and manage AI coding skills
+  </Card>
+  
+  <Card title="setup" icon="wrench" href="/cli/setup">
+    Configure Context7 MCP for your AI coding agent
+  </Card>
+  
+  <Card title="auth" icon="lock" href="/cli/auth">
+    Manage authentication with Context7
+  </Card>
+</CardGroup>
+
+## Global Options
+
+### `--base-url <url>`
+
+Specify a custom base URL for the Context7 API.
+
+```bash
+ctx7 --base-url https://custom.context7.com skills search pdf
+```
+
+### `--version`
+
+Display the current version of ctx7.
+
+```bash
+ctx7 --version
+```
+
+### `--help`
+
+Show help information for any command.
+
+```bash
+ctx7 --help
+ctx7 skills --help
+ctx7 setup --help
+```
+
+## Command Aliases
+
+For faster workflow, ctx7 provides short aliases:
+
+| Full Command | Alias |
+|--------------|-------|
+| `ctx7 skills install` | `ctx7 si` |
+| `ctx7 skills search` | `ctx7 ss` |
+| `ctx7 skills suggest` | `ctx7 ssg` |
+| `ctx7 skills install` | `ctx7 skills i` or `ctx7 skills add` |
+| `ctx7 skills search` | `ctx7 skills s` |
+| `ctx7 skills list` | `ctx7 skills ls` |
+| `ctx7 skills remove` | `ctx7 skills rm` or `ctx7 skills delete` |
+| `ctx7 skills generate` | `ctx7 skills gen` or `ctx7 skills g` |
+
+## Examples
+
+### Search and Install
+
+```bash
+# Search for React-related skills
+ctx7 skills search react hooks
+
+# Install all skills from a repository
+ctx7 skills install /anthropics/skills --all
+
+# Install a specific skill
+ctx7 skills install /anthropics/skills pdf
+```
+
+### Target Specific Agents
+
+```bash
+# Install to Cursor
+ctx7 skills install /anthropics/skills --cursor
+
+# Install globally for Claude Code
+ctx7 skills install /anthropics/skills --claude --global
+
+# Install to multiple agents
+ctx7 skills install /anthropics/skills --cursor --universal
+```
+
+### List and Manage
+
+```bash
+# List installed skills for Claude Code
+ctx7 skills list --claude
+
+# List all global skills
+ctx7 skills list --global
+
+# Remove a skill
+ctx7 skills remove pdf
+```
+
+## Skill Directories
+
+Skills are installed to different directories based on the target agent:
+
+| Agent | Project Path | Global Path |
+|-------|--------------|-------------|
+| **Universal** | `.agents/skills/` | `~/.config/agents/skills/` |
+| **Claude Code** | `.claude/skills/` | `~/.config/claude/skills/` |
+| **Cursor** | `.cursor/skills/` | `~/.cursor/skills/` |
+| **Antigravity** | `.agent/skills/` | `~/.config/agent/skills/` |
+| **OpenCode** | `.config/opencode/skills/` | `~/.config/opencode/skills/` |
+
+<Note>
+The **Universal** directory (`.agents/skills/`) is designed to work across multiple AI coding agents.
+</Note>
+
+## Output Examples
+
+### Successful Installation
+
+```
+✔ Installed 2 skill(s)
+
+Universal .agents/skills/
+  + pdf
+  + mintlify
+
+Cursor .cursor/skills/
+  + pdf
+  + mintlify
+```
+
+### Search Results
+
+```
+✔ Found 5 skill(s)
+
+Select skills to install:
+           Installs  Trust(0-10)
+ ❯◯ 1. pdf         150       8.5
+  ◯ 2. mintlify    89        9.2
+  ◯ 3. python      234       7.8
+  ◯ 4. typescript  178       8.9
+  ◯ 5. react       312       9.1
+```
+
+## Error Handling
+
+### Permission Errors
+
+If you encounter permission errors:
+
+```bash
+sudo chown -R $(whoami) "~/.config/claude"
+```
+
+### Network Errors
+
+Check your internet connection and try again. You can also specify a custom base URL:
+
+```bash
+ctx7 --base-url https://context7.com skills search pdf
+```
+
+## Resources
+
+- Browse skills at [context7.com](https://context7.com)
+- View documentation at [docs.context7.com](https://docs.context7.com)
+- Report issues on [GitHub](https://github.com/context7/ctx7)

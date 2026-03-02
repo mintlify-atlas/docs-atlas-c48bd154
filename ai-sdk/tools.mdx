@@ -1,0 +1,311 @@
+---
+title: 'AI SDK Tools'
+description: 'Documentation lookup tools for Vercel AI SDK workflows'
+---
+
+## Overview
+
+Context7 provides two AI SDK tools that work together to fetch documentation:
+
+1. **`resolveLibraryId`** - Searches for libraries and returns Context7-compatible library IDs
+2. **`queryDocs`** - Fetches documentation for a specific library using its ID
+
+## resolveLibraryId
+
+Resolves a library name to a Context7-compatible library ID and returns matching libraries.
+
+### Function Signature
+
+```typescript
+function resolveLibraryId(config?: Context7ToolsConfig): Tool
+```
+
+### Configuration
+
+```typescript
+interface Context7ToolsConfig {
+  /**
+   * Context7 API key. If not provided, uses CONTEXT7_API_KEY environment variable.
+   */
+  apiKey?: string;
+}
+```
+
+### Input Schema
+
+```typescript
+{
+  query: string;        // The user's original question or task
+  libraryName: string;  // Library name to search for
+}
+```
+
+### Usage Example
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Find React documentation about hooks',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+```
+
+### With Custom API Key
+
+```typescript
+const tool = resolveLibraryId({
+  apiKey: 'ctx7sk-...',
+});
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Search for Next.js library',
+  tools: {
+    resolveLibraryId: tool,
+  },
+  stopWhen: stepCountIs(3),
+});
+```
+
+### Return Format
+
+Returns an array of library objects with:
+- Library ID (e.g., `/reactjs/react.dev`, `/vercel/next.js`)
+- Description
+- Source reputation (High/Medium/Low)
+- Code snippet coverage
+- Benchmark score (quality indicator, 100 is highest)
+
+### Tool Description
+
+The tool uses this description for the AI model:
+
+> Resolves a package/product name to a Context7-compatible library ID and returns matching libraries.
+>
+> You MUST call this function before 'queryDocs' to obtain a valid Context7-compatible library ID UNLESS the user explicitly provides a library ID in the format '/org/project' or '/org/project/version' in their query.
+>
+> Selection Process:
+> 1. Analyze the query to understand what library/package the user is looking for
+> 2. Return the most relevant match based on:
+>    - Name similarity to the query (exact matches prioritized)
+>    - Description relevance to the query's intent
+>    - Documentation coverage (prioritize libraries with higher Code Snippet counts)
+>    - Source reputation (consider libraries with High or Medium reputation more authoritative)
+>    - Benchmark Score: Quality indicator (100 is the highest score)
+
+## queryDocs
+
+Fetches documentation for a library using its Context7 library ID.
+
+### Function Signature
+
+```typescript
+function queryDocs(config?: Context7ToolsConfig): Tool
+```
+
+### Configuration
+
+```typescript
+interface Context7ToolsConfig {
+  /**
+   * Context7 API key. If not provided, uses CONTEXT7_API_KEY environment variable.
+   */
+  apiKey?: string;
+}
+```
+
+### Input Schema
+
+```typescript
+{
+  libraryId: string;  // Context7-compatible library ID from resolveLibraryId
+  query: string;      // Specific question or topic to search for
+}
+```
+
+### Usage Example
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'How do I use React hooks?',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+```
+
+### With streamText
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { streamText, stepCountIs } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
+
+const result = streamText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  prompt: 'Explain Next.js App Router',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+### Direct Library ID Usage
+
+If you already know the library ID, you can skip `resolveLibraryId`:
+
+```typescript
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Get documentation about routing from /vercel/next.js',
+  tools: {
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(3),
+});
+```
+
+### Tool Description
+
+The tool uses this description for the AI model:
+
+> Retrieves and queries up-to-date documentation and code examples from Context7 for any programming library or framework.
+>
+> You must call 'resolveLibraryId' first to obtain the exact Context7-compatible library ID required to use this tool, UNLESS the user explicitly provides a library ID in the format '/org/project' or '/org/project/version' in their query.
+
+## Multi-Step Workflow
+
+Both tools work together in a typical workflow:
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text, steps } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'How do I implement server actions in Next.js?',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+  },
+  stopWhen: stepCountIs(5),
+});
+
+// The model will:
+// Step 1: Call resolveLibraryId with libraryName: "Next.js"
+// Step 2: Call queryDocs with the returned library ID and query about server actions
+// Step 3: Synthesize answer with code examples
+
+console.log(text);
+console.log('Steps taken:', steps.length);
+```
+
+## Advanced Configuration
+
+### Custom API Keys per Tool
+
+```typescript
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Find React documentation',
+  tools: {
+    resolveLibraryId: resolveLibraryId({ apiKey: 'ctx7sk-resolve-key' }),
+    queryDocs: queryDocs({ apiKey: 'ctx7sk-docs-key' }),
+  },
+  stopWhen: stepCountIs(5),
+});
+```
+
+### With Additional Tools
+
+```typescript
+import { resolveLibraryId, queryDocs } from '@upstash/context7-tools-ai-sdk';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+import { openai } from '@ai-sdk/openai';
+
+const customTool = tool({
+  description: 'Search web for additional context',
+  inputSchema: z.object({
+    query: z.string(),
+  }),
+  execute: async ({ query }) => {
+    // Custom implementation
+    return { result: 'Custom data' };
+  },
+});
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Find React docs and web resources',
+  tools: {
+    resolveLibraryId: resolveLibraryId(),
+    queryDocs: queryDocs(),
+    searchWeb: customTool,
+  },
+});
+```
+
+## Error Handling
+
+Both tools handle errors gracefully and return informative messages:
+
+```typescript
+// If library not found
+'No libraries found matching "invalid-lib". Try a different search term or check the library name.'
+
+// If API key is invalid
+'Error searching for libraries: Unauthorized. Check your API key and try again.'
+
+// If documentation not found
+'No documentation found for library "/invalid/id". This might have happened because you used an invalid Context7-compatible library ID. Use \'resolveLibraryId\' to get a valid ID.'
+```
+
+## Type Exports
+
+The package re-exports useful types from the SDK:
+
+```typescript
+import type {
+  Context7Config,
+  Library,
+  Documentation,
+  GetContextOptions,
+} from '@upstash/context7-tools-ai-sdk';
+```
+
+## Best Practices
+
+1. **Always use stepCountIs**: Prevent infinite loops by setting a maximum step count
+2. **Let AI decide workflow**: The model will automatically call `resolveLibraryId` before `queryDocs`
+3. **Use environment variables**: Store API keys in `CONTEXT7_API_KEY` for security
+4. **Provide specific queries**: More detailed queries yield better documentation results
+5. **Handle tool results**: Check the `steps` array to see which tools were called
+
+## Next Steps
+
+<Card title="Context7Agent" icon="robot" href="/ai-sdk/agent">
+  Use the pre-configured agent that handles the multi-step workflow automatically
+</Card>

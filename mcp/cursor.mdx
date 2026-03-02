@@ -1,0 +1,307 @@
+---
+title: 'Cursor Setup'
+description: 'Install and configure Context7 MCP Server in Cursor IDE'
+---
+
+# Cursor Setup
+
+Install Context7 MCP Server in Cursor to get up-to-date documentation and code examples directly in your AI prompts.
+
+## Prerequisites
+
+- Cursor IDE version 1.0 or higher
+- (Recommended) Free API key from [context7.com/dashboard](https://context7.com/dashboard)
+
+<Note>
+  While Context7 works without an API key, we recommend getting a free API key for higher rate limits.
+</Note>
+
+## Installation Methods
+
+Cursor supports both remote and local MCP server connections. Choose the method that best fits your workflow:
+
+<Tabs>
+  <Tab title="Remote Server (Recommended)">
+    Remote connection uses the hosted Context7 MCP server. No local installation required.
+
+    ### One-Click Install
+
+    Click the button below for instant installation:
+
+    [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=context7&config=eyJ1cmwiOiJodHRwczovL21jcC5jb250ZXh0Ny5jb20vbWNwIn0%3D)
+
+    ### Manual Configuration
+
+    <Steps>
+      <Step title="Open Cursor Settings">
+        Go to: `Settings` → `Cursor Settings` → `MCP` → `Add new global MCP server`
+      </Step>
+
+      <Step title="Add Configuration">
+        Add the following to your `~/.cursor/mcp.json` file:
+
+        <CodeGroup>
+          ```json With API Key (Recommended)
+          {
+            "mcpServers": {
+              "context7": {
+                "url": "https://mcp.context7.com/mcp",
+                "headers": {
+                  "CONTEXT7_API_KEY": "YOUR_API_KEY"
+                }
+              }
+            }
+          }
+          ```
+
+          ```json Without API Key
+          {
+            "mcpServers": {
+              "context7": {
+                "url": "https://mcp.context7.com/mcp"
+              }
+            }
+          }
+          ```
+
+          ```json With OAuth
+          {
+            "mcpServers": {
+              "context7": {
+                "url": "https://mcp.context7.com/mcp/oauth"
+              }
+            }
+          }
+          ```
+        </CodeGroup>
+
+        <Note>
+          Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+        </Note>
+      </Step>
+
+      <Step title="Restart Cursor">
+        Close and reopen Cursor for the changes to take effect.
+      </Step>
+    </Steps>
+
+    ### Benefits
+
+    - No local installation or dependencies
+    - Always running the latest version
+    - Reduced system resource usage
+    - Perfect for teams (consistent configuration)
+  </Tab>
+
+  <Tab title="Local Server">
+    Local connection runs the MCP server on your machine using `npx`.
+
+    ### One-Click Install
+
+    Click the button below for instant installation:
+
+    [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=context7&config=eyJjb21tYW5kIjoibnB4IC15IEB1cHN0YXNoL2NvbnRleHQ3LW1jcCJ9)
+
+    ### Manual Configuration
+
+    <Steps>
+      <Step title="Open Cursor Settings">
+        Go to: `Settings` → `Cursor Settings` → `MCP` → `Add new global MCP server`
+      </Step>
+
+      <Step title="Add Configuration">
+        Add the following to your `~/.cursor/mcp.json` file:
+
+        <CodeGroup>
+          ```json With API Key (Recommended)
+          {
+            "mcpServers": {
+              "context7": {
+                "command": "npx",
+                "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+              }
+            }
+          }
+          ```
+
+          ```json Without API Key
+          {
+            "mcpServers": {
+              "context7": {
+                "command": "npx",
+                "args": ["-y", "@upstash/context7-mcp"]
+              }
+            }
+          }
+          ```
+
+          ```json With Environment Variable
+          {
+            "mcpServers": {
+              "context7": {
+                "command": "npx",
+                "args": ["-y", "@upstash/context7-mcp"],
+                "env": {
+                  "CONTEXT7_API_KEY": "YOUR_API_KEY"
+                }
+              }
+            }
+          }
+          ```
+        </CodeGroup>
+
+        <Note>
+          Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+        </Note>
+      </Step>
+
+      <Step title="Restart Cursor">
+        Close and reopen Cursor for the changes to take effect.
+      </Step>
+    </Steps>
+
+    ### Benefits
+
+    - Maximum privacy (runs entirely on your machine)
+    - Works offline after initial package download
+    - Full control over server lifecycle
+  </Tab>
+
+  <Tab title="Project-Specific">
+    Install Context7 for a specific project only (not globally).
+
+    <Steps>
+      <Step title="Create Project Config">
+        Create `.cursor/mcp.json` in your project root directory.
+      </Step>
+
+      <Step title="Add Configuration">
+        Use the same configuration format as global installation:
+
+        ```json .cursor/mcp.json
+        {
+          "mcpServers": {
+            "context7": {
+              "url": "https://mcp.context7.com/mcp",
+              "headers": {
+                "CONTEXT7_API_KEY": "YOUR_API_KEY"
+              }
+            }
+          }
+        }
+        ```
+      </Step>
+
+      <Step title="Restart Cursor">
+        Close and reopen Cursor in the project directory.
+      </Step>
+    </Steps>
+
+    <Info>
+      Project-specific configuration takes precedence over global configuration.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Automated Setup
+
+Use the Context7 CLI for automated setup:
+
+```bash
+npx ctx7 setup --cursor
+```
+
+This command:
+- Authenticates via OAuth
+- Generates an API key
+- Configures the MCP server
+- Sets up recommended rules
+
+## Verify Installation
+
+To verify Context7 MCP is working:
+
+<Steps>
+  <Step title="Open Cursor">
+    Start or restart Cursor IDE.
+  </Step>
+
+  <Step title="Check MCP Status">
+    Look for "Context7" in the MCP status indicator in Cursor's status bar.
+  </Step>
+
+  <Step title="Test with a Prompt">
+    Try a prompt like:
+    
+    ```txt
+    Create a Next.js middleware that checks for a valid JWT. use context7
+    ```
+
+    You should see Context7 tools being invoked and documentation being retrieved.
+  </Step>
+</Steps>
+
+## Add a Rule (Recommended)
+
+To avoid typing `use context7` in every prompt, add an automatic invocation rule:
+
+<Steps>
+  <Step title="Open Rules Settings">
+    Go to: `Cursor Settings` → `Rules`
+  </Step>
+
+  <Step title="Add Rule">
+    Add the following rule:
+
+    ```txt
+    Always use Context7 MCP when I need library/API documentation, code generation, 
+    setup or configuration steps without me having to explicitly ask.
+    ```
+  </Step>
+</Steps>
+
+Now Context7 will automatically activate for code-related questions.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="MCP server not appearing in Cursor">
+    1. Verify the JSON syntax in your `mcp.json` file
+    2. Check that the file is in the correct location (`~/.cursor/mcp.json`)
+    3. Restart Cursor completely
+    4. Check Cursor's output panel for error messages
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    1. Verify your API key is correct (should start with `ctx7sk`)
+    2. Ensure the API key is not expired
+    3. Try regenerating your API key at [context7.com/dashboard](https://context7.com/dashboard)
+  </Accordion>
+
+  <Accordion title="Local server fails to start">
+    1. Ensure Node.js is installed (`node --version`)
+    2. Clear npx cache: `npx clear-npx-cache`
+    3. Try running manually: `npx -y @upstash/context7-mcp`
+    4. Check for firewall or antivirus blocking npx
+  </Accordion>
+
+  <Accordion title="Rate limit errors">
+    1. Get a free API key at [context7.com/dashboard](https://context7.com/dashboard)
+    2. Check your usage and quota
+    3. Consider upgrading to a paid plan at [context7.com/plans](https://context7.com/plans)
+  </Accordion>
+</AccordionGroup>
+
+For more help, see the [Troubleshooting Guide](/guides/troubleshooting) or join our [Discord Community](https://upstash.com/discord).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/mcp/configuration">
+    Learn about advanced configuration options
+  </Card>
+  
+  <Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+    Explore available MCP tools
+  </Card>
+</CardGroup>

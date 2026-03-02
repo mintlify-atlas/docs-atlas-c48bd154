@@ -1,0 +1,291 @@
+---
+title: 'Claude Code Setup'
+description: 'Install and configure Context7 MCP Server in Claude Code'
+---
+
+# Claude Code Setup
+
+Install Context7 MCP Server in Claude Code to access up-to-date documentation and code examples directly in your AI coding sessions.
+
+## Prerequisites
+
+- Claude Code CLI installed
+- (Recommended) Free API key from [context7.com/dashboard](https://context7.com/dashboard)
+
+<Note>
+  While Context7 works without an API key, we recommend getting a free API key for higher rate limits.
+</Note>
+
+## Installation Methods
+
+Claude Code supports both local and remote MCP server connections via the `claude mcp add` command.
+
+<Tabs>
+  <Tab title="Local Server (Recommended)">
+    Local connection runs the MCP server on your machine using `npx`.
+
+    ### Global Installation
+
+    Install Context7 for all Claude Code sessions:
+
+    <CodeGroup>
+      ```bash With API Key (Recommended)
+      claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+      ```
+
+      ```bash Without API Key
+      claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
+      ```
+    </CodeGroup>
+
+    <Note>
+      Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+    </Note>
+
+    ### Project-Specific Installation
+
+    Install Context7 for the current project only (omit `--scope user`):
+
+    ```bash
+    claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+    ```
+
+    ### Benefits
+
+    - Maximum privacy (runs entirely on your machine)
+    - Works offline after initial package download
+    - Full control over server lifecycle
+    - Recommended by Claude Code team
+  </Tab>
+
+  <Tab title="Remote Server">
+    Remote connection uses the hosted Context7 MCP server via HTTP.
+
+    ### Global Installation
+
+    <CodeGroup>
+      ```bash With API Key (Recommended)
+      claude mcp add --scope user --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+      ```
+
+      ```bash Without API Key
+      claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp
+      ```
+
+      ```bash With OAuth
+      claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp/oauth
+      ```
+    </CodeGroup>
+
+    <Note>
+      Replace `YOUR_API_KEY` with your actual API key from [context7.com/dashboard](https://context7.com/dashboard)
+    </Note>
+
+    ### Project-Specific Installation
+
+    Install for the current project only (omit `--scope user`):
+
+    ```bash
+    claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+    ```
+
+    ### Benefits
+
+    - No local installation or dependencies
+    - Always running the latest version
+    - Reduced system resource usage
+    - Perfect for teams (consistent configuration)
+  </Tab>
+</Tabs>
+
+## Automated Setup
+
+Use the Context7 CLI for automated setup:
+
+```bash
+npx ctx7 setup --claude
+```
+
+This command:
+- Authenticates via OAuth
+- Generates an API key
+- Configures the MCP server via `claude mcp add`
+- Sets up recommended rules in `CLAUDE.md`
+
+## Verify Installation
+
+<Steps>
+  <Step title="List MCP Servers">
+    Check that Context7 is installed:
+
+    ```bash
+    claude mcp list
+    ```
+
+    You should see `context7` in the list of configured servers.
+  </Step>
+
+  <Step title="Start Claude Code Session">
+    Start a new coding session:
+
+    ```bash
+    claude
+    ```
+  </Step>
+
+  <Step title="Test with a Prompt">
+    Try a prompt like:
+    
+    ```txt
+    Create a Next.js middleware that checks for a valid JWT. use context7
+    ```
+
+    You should see Context7 tools being invoked and documentation being retrieved.
+  </Step>
+</Steps>
+
+## Add a Rule (Recommended)
+
+To avoid typing `use context7` in every prompt, add an automatic invocation rule to your `CLAUDE.md` file.
+
+### Global Rule
+
+Create or edit `~/.config/claude/CLAUDE.md`:
+
+```markdown CLAUDE.md
+# Context7 Auto-Invocation
+
+Always use Context7 MCP when I need library/API documentation, code generation, 
+setup or configuration steps without me having to explicitly ask.
+```
+
+### Project-Specific Rule
+
+Create `CLAUDE.md` in your project root:
+
+```markdown CLAUDE.md
+# Project Rules
+
+Always use Context7 MCP when I need library/API documentation, code generation, 
+setup or configuration steps without me having to explicitly ask.
+```
+
+## Managing Installation
+
+### Update Context7
+
+For local installations using `npx`, Context7 automatically uses the latest version. For pinned versions:
+
+```bash
+# Remove existing installation
+claude mcp remove context7
+
+# Reinstall latest version
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+```
+
+### Remove Context7
+
+```bash
+claude mcp remove context7
+```
+
+### View Configuration
+
+```bash
+claude mcp show context7
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="MCP server not listed">
+    1. Verify the installation command completed successfully
+    2. Run `claude mcp list` to check registered servers
+    3. Try removing and reinstalling: `claude mcp remove context7` then reinstall
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    1. Verify your API key is correct (should start with `ctx7sk`)
+    2. Ensure the API key is properly quoted in the command
+    3. Try regenerating your API key at [context7.com/dashboard](https://context7.com/dashboard)
+    4. For remote connections, check the header name is `CONTEXT7_API_KEY`
+  </Accordion>
+
+  <Accordion title="Local server fails to start">
+    1. Ensure Node.js is installed: `node --version`
+    2. Clear npx cache: `npx clear-npx-cache`
+    3. Test manual execution: `npx -y @upstash/context7-mcp`
+    4. Check Claude Code logs for error messages
+  </Accordion>
+
+  <Accordion title="Remote connection fails">
+    1. Verify internet connectivity
+    2. Check that the URL is correct: `https://mcp.context7.com/mcp`
+    3. Test the endpoint: `curl https://mcp.context7.com/ping`
+    4. Ensure firewall allows HTTPS connections
+  </Accordion>
+
+  <Accordion title="Rate limit errors">
+    1. Get a free API key at [context7.com/dashboard](https://context7.com/dashboard)
+    2. Check your usage and quota on the dashboard
+    3. Consider upgrading to a paid plan at [context7.com/plans](https://context7.com/plans)
+  </Accordion>
+
+  <Accordion title="Tools not being invoked">
+    1. Add `use context7` explicitly to your prompt
+    2. Check that your `CLAUDE.md` rule is properly formatted
+    3. Verify Context7 server is running: `claude mcp list`
+    4. Try restarting Claude Code
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Configuration
+
+### Using Environment Variables
+
+Store your API key in an environment variable:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export CONTEXT7_API_KEY="your_api_key_here"
+```
+
+Then install without specifying the key in the command:
+
+```bash
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
+```
+
+The server will automatically read from the `CONTEXT7_API_KEY` environment variable.
+
+### Multiple Configurations
+
+You can have different configurations for different projects:
+
+```bash
+# Global configuration (no API key)
+claude mcp add --scope user context7-global -- npx -y @upstash/context7-mcp
+
+# Project-specific with API key
+cd ~/projects/my-project
+claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+```
+
+## Learn More
+
+For more details on Claude Code MCP integration, see:
+- [Claude Code MCP Documentation](https://code.claude.com/docs/en/mcp)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/mcp/configuration">
+    Learn about advanced configuration options
+  </Card>
+  
+  <Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+    Explore available MCP tools
+  </Card>
+</CardGroup>
